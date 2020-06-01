@@ -1,17 +1,1 @@
-[0m[[0m[0mdebug[0m] [0m[0mPackaging /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/bit_fluc_2.11-1.0.jar ...[0m
-[0m[[0m[0mdebug[0m] [0m[0mInput file mappings:[0m
-[0m[[0m[0mdebug[0m] [0m[0m	dataload[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/dataload[0m
-[0m[[0m[0mdebug[0m] [0m[0m	dataload/DataLoader.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/dataload/DataLoader.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	bitfluc[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/bitfluc[0m
-[0m[[0m[0mdebug[0m] [0m[0m	bitfluc/BitFluc.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/bitfluc/BitFluc.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	bitfluc/BitFluc$.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/bitfluc/BitFluc$.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	bitfluc/BitFluc$$anonfun$2.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/bitfluc/BitFluc$$anonfun$2.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	bitfluc/BitFluc$$anonfun$1.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/bitfluc/BitFluc$$anonfun$1.class[0m
-[0m[[0m[0mdebug[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0mdebug[0m] [0m[0mJar uptodate: /usr/local/spark/scalaSpark/bitcoin-fluc-detector/batch_processing/target/scala-2.11/bit_fluc_2.11-1.0.jar[0m
