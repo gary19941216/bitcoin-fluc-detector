@@ -1,10 +1,2 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/spark/scalaSpark/bitcoin/src/main/scala/main.scala:24:59: object org.apache.hadoop.fs.s3a.S3AFileSystem is not a value[0m
-[0m[[0m[31merror[0m] [0m[0m          .config("fs.s3a.impl", org.apache.hadoop.fs.s3a.S3AFileSystem)[0m
-[0m[[0m[31merror[0m] [0m[0m                                                          ^[0m
-[0m[[0m[31merror[0m] [0m[0m/usr/local/spark/scalaSpark/bitcoin/src/main/scala/main.scala:25:76: object TemporaryAWSCredentialsProvider is not a member of package org.apache.hadoop.fs.s3a[0m
-[0m[[0m[31merror[0m] [0m[0m          .config("fs.s3a.awsCredentialsProvider",org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider)[0m
-[0m[[0m[31merror[0m] [0m[0m                                                                           ^[0m
-[0m[[0m[31merror[0m] [0m[0m/usr/local/spark/scalaSpark/bitcoin/src/main/scala/main.scala:26:53: not found: value Dcom[0m
-[0m[[0m[31merror[0m] [0m[0m          .config("spark.driver.extraJavaOptions", -Dcom.amazonaws.services.s3.enableV4)[0m
-[0m[[0m[31merror[0m] [0m[0m                                                    ^[0m
-[0m[[0m[31merror[0m] [0m[0mthree errors found[0m
+[0m[[0m[33mwarn[0m] [0m[0mthere was one deprecation warning; re-run with -deprecation for details[0m
+[0m[[0m[33mwarn[0m] [0m[0mone warning found[0m
