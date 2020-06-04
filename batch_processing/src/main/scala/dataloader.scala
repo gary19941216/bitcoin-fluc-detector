@@ -2,10 +2,11 @@ package dataload
 
 import org.apache.spark.sql._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.types.{StructField, StructType}
 
-class DataLoader(val spark: SparkSession)
+class DataLoader(val spark: SparkSession, val schema: StructType)
 {
-    private var data : Dataset[Row] = _  
+    private var data : Dataset[Row] = _
 
     //load json data from file
     def loadJson(path: String) : Unit =
@@ -21,7 +22,7 @@ class DataLoader(val spark: SparkSession)
 
     def loadParquet(path: String) : Unit = 
     {
-        data = spark.read.parquet(path)
+        data = spark.read.schema(schema).parquet(path)
     }
 
     //retrieve data
