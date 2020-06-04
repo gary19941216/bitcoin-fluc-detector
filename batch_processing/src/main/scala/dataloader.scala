@@ -19,6 +19,11 @@ class DataLoader(val spark: SparkSession)
         data = spark.read.format("avro").load(path)
     }
 
+    def loadParquet(path: String) : Unit = 
+    {
+        data = spark.read.parquet(path)
+    }
+
     //retrieve data
     def getData() : Dataset[Row] = 
     {

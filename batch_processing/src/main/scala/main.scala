@@ -13,16 +13,18 @@ object BitFluc
         val spark = getSparkSession()
         val dataLoader = new DataLoader(spark)
 
-        val inputPath = "https://storage.googleapis.com/gary_bitcoin_test/bitcoin_data-000000000000.avro"
-        //val inputPath = "s3a://gary-reddit-json/comments/comments_2011_05.json"
-        val outputPath = "s3a://gary-reddit-parquet/comments"
+        //val inputPath = "s3a://gary-bitcoin-avro/bitcoin_data-000000000000.avro"
+        val inputPath = "s3a://gary-reddit-json/comments/RC_2011-01.json"
+        val inputPath1 = "s3a://gary-reddit-json/comments/RC_2011-01.json"
+        //val outputPath = "s3a://gary-reddit-parquet/comments"
 
         //dataLoader.loadURL(url)
         
         //dataLoader.showContent()
-        //dataLoader.loadJson(inputPath) 
-        dataLoader.loadAvro(inputPath)
+        dataLoader.loadJson(inputPath) 
+        //dataLoader.loadAvro(inputPath)
         dataLoader.printSchema()
+
         /*dataLoader.showContent()
         dataLoader.writeParquet(outputPath)*/                                
     }
