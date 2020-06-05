@@ -4,25 +4,29 @@ import org.apache.spark.sql._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types.{StructField, StructType}
 
-class DataLoader(val spark: SparkSession, val schema: StructType)
+class DataLoader(val spark: SparkSession)
 {
     private var data : Dataset[Row] = _
+    private var schema : StructType = _
 
     //load json data from file
-    def loadJson(path: String) : Unit =
+    def loadJson(path: String) : DataLoader =
     {    
         data = spark.read.json(path)
+        return this
     }
 
     //load avro data from file
-    def loadAvro(path: String) : Unit = 
+    def loadAvro(path: String) : DataLoader = 
     {
         data = spark.read.format("avro").load(path)
+        return this
     }
 
-    def loadParquet(path: String) : Unit = 
+    def loadParquet(path: String) : DataLoader = 
     {
         data = spark.read.schema(schema).parquet(path)
+        return this
     }
 
     //retrieve data
@@ -44,9 +48,19 @@ class DataLoader(val spark: SparkSession, val schema: StructType)
     }
 
     //show content in DataFrame
-    def showContent() : Unit = 
+    def show(num: Int) : Unit = 
     {
-        data.show()
+        data.show(num)
+    }
+
+    def loadSchema(schema: StructType) : Unit = 
+    {
+        this.schema = schema
+    }
+
+    def take(num: Int) : Array[Row] = 
+    {
+        return data.take(num)
     }
     
 }
