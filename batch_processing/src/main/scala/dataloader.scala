@@ -9,10 +9,18 @@ class DataLoader(val spark: SparkSession)
     private var data : Dataset[Row] = _
     private var schema : StructType = _
 
+    //load csv data from file
+    def loadCsv(path: String) : DataLoader = 
+    {   
+        //csv file with no header
+        data = spark.read.schema(schema).csv(path)//schema(schema).option("header","false").csv(path)
+        return this
+    }
+
     //load json data from file
     def loadJson(path: String) : DataLoader =
     {    
-        data = spark.read.json(path)
+        data = spark.read.schema(schema).json(path)
         return this
     }
 
@@ -52,12 +60,14 @@ class DataLoader(val spark: SparkSession)
     {
         data.show(num)
     }
-
+    
+    //load the schema
     def loadSchema(schema: StructType) : Unit = 
     {
         this.schema = schema
     }
 
+    //take only the specify numbers of row
     def take(num: Int) : Array[Row] = 
     {
         return data.take(num)

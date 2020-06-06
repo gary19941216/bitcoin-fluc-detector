@@ -5,6 +5,7 @@ import java.net.URL
 import java.io.File
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
+import org.apache.hadoop.fs._
 import dataload.DataLoader
 
 object BitFluc
@@ -12,40 +13,55 @@ object BitFluc
     def main(args: Array[String])
     {   
         val spark = getSparkSession()
-        val dataLoader = new DataLoader(spark, getRCSchema())
+        val dataLoader = new DataLoader(spark)
 
-        //val inputPath = "s3a://gary-bitcoin-avro/bitcoin_data-000000000000.avro"
-        val inputPath = "s3a://gary-reddit-json/comments/RC_2018-0*"
-        val inputPath1 = "s3a://gary-reddit-parquet/comments/part-00000-0f16ed32-9a03-4965-81d9-ad67a1a1fe69-c000.snappy.parquet"
-        //val outputPath = "s3a://gary-reddit-parquet/comments"
+        //val inputPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
+        val inputPath = "s3a://gary-bitcoin-avro/*"
+        //val inputPath = "s3a://gary-reddit-json/comments/RC_2014*.json"
+        //val inputPath1 = "s3a://gary-reddit-parquet/comments/*.snappy.parquet"
+        val outputPath = "s3a://gary-bitcoin-transaction-parquet/transaction"
 
         //dataLoader.loadURL(url)
         
-        //dataLoader.showContent()
-        
-	
-        //dataLoader.loadJson(inputPath) 
-        //dataLoader.loadAvro(inputPath)
-        //dataLoader.printSchema()
+        //dataLoader.showContent() 
 
-        dataLoader.loadParquet(inputPath1)
-        dataLoader.printSchema()
-        /*dataLoader.showContent()
-        dataLoader.writeParquet(outputPath)*/                                
+        //inputrdd.foreach{ x => { println(x) } }
+	//dataLoader.loadSchema(getBPSchema())
+        dataLoader.loadAvro(inputPath).writeParquet(outputPath) 
+        //dataLoader.loadAvro(inputPath)
+        
+
+        //dataLoader.loadParquet(inputPath1).show(3)
+        //dataLoader.printSchema()
+        //dataLoader.showCotent()
+        //dataLoader.writeParquet(outputPath)                                
     }
 
     def getSparkSession(): SparkSession =  
     {
 	val spark = SparkSession.builder
           .appName("Bit Fluc")
-          .getOrCreate()
-	 
+          .master("spark://10.0.0.11:7077")
+          .config("spark.default.parallelism", 20)  
+          .getOrCreate()	
 	return spark 
     }
 
+    // get bitcoin price schema
+    def getBPSchema(): StructType = 
+    {
+        val schema = StructType(Seq(
+    			StructField("utc", StringType, true),
+    			StructField("price", FloatType, true),
+    			StructField("volume", FloatType, true)))
+	
+	return schema
+    }
+
+    // get reddit comment schema
     def getRCSchema(): StructType =
     {
-       val schema = StructType(Seq(
+        val schema = StructType(Seq(
 			StructField("archived", BooleanType, true),
 			StructField("author", StringType, true),
 			StructField("author_flair_css_class", StringType, true),
