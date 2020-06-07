@@ -1,12 +1,11 @@
 package bitfluc
 
-import sys.process._
-import java.net.URL
-import java.io.File
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.hadoop.fs._
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions._
 import dataload.DataLoader
 import preprocess.Preprocessor
 
@@ -26,45 +25,50 @@ object BitFluc
         //val inputPath = "s3a://gary-bitcoin-avro/*"
         //val inputPath1 = "s3a://gary-reddit-parquet/comments/*.snappy.parquet"
         val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00000*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-0012*"
         val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/*"
-        val bpParquetPath = "s3a://gary-bitcoin-price-parquet/bitcoin/*"
+        //val bpParquetPath = "s3a://gary-bitcoin-price-parquet/bitcoin/*"
 
         //bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)
 
-        //val rcDF = loadDFJson(rcLoader, rcJsonPath)
-        //val rc_time_body = rcDF.select("created_utc", "body")
-        val bpDF = loadDFCsv(bpLoader, bpParquetPath)
-        val bp_time_price = bpDF.select("utc","price")
+        val reddit_comment = loadDFParquet(rcLoader, rcParquetPath)//.withColumn("time", from_utc_timestamp(from_unixtime(col("utc")), "PDT"))
+        reddit_comment.createOrReplaceTempView("reddit_comment")
+        val bitcoin_price = loadDFCsv(bpLoader, bpCsvPath)//.withColumn("time", from_utc_timestamp(from_unixtime(col("created_utc")), "PDT"))
+        bitcoin_price.createOrReplaceTempView("bitcoin_price")
 
-        bpDF.show(10)
+        
 
-        /*val rbJoinDF = rcDF.join(bpDF, rcDF("created_utc") === bpDF("utc"), "outer")
+        //val rbJoinDF = rcTB.join(bpTP, rcTB("created_utc") === bpTP("utc"), "inner")
+        /*val time_body_price = spark.sql("""
+        SELECT BP.utc, RC.body, BP.price 
+        FROM reddit_comment as RC
+        FULL OUTER JOIN bitcoin_price as BP ON RC.created_utc=BP.created_utc
+        """)
 
-        rbJoinDF.explain()
-        rbJoinDF.show(5)*/
+        time_body_price.explain()
+        time_body_price.show(20)*/
 
     }
 
     // load DataFrame from a parquet file
-    def loadDFParquet(loader : DataLoader, path : String): Dataset[Row] = 
+    def loadDFParquet(loader : DataLoader, path : String): DataFrame = 
     {
        return loader.loadParquet(path).getData()
     }
 
     // load DataFrame from a json file   
-    def loadDFJson(loader : DataLoader, path : String): Dataset[Row] =
+    def loadDFJson(loader : DataLoader, path : String): DataFrame =
     {
        return loader.loadJson(path).getData()
     }
 
     // load DataFrame from a csv file
-    def loadDFCsv(loader : DataLoader, path : String): Dataset[Row] =
+    def loadDFCsv(loader : DataLoader, path : String): DataFrame =
     {
        return loader.loadCsv(path).getData()  
     }
 
-    def loadDFAvro(loader : DataLoader, path : String): Dataset[Row] =
+    def loadDFAvro(loader : DataLoader, path : String): DataFrame =
     {
        return loader.loadAvro(path).getData()                                                                  
     }

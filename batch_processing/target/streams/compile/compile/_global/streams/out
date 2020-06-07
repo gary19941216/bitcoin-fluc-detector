@@ -1,4 +1,13 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:34:57: not found: value bpParquetPath[0m
-[0m[[0m[31merror[0m] [0m[0m        bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)[0m
-[0m[[0m[31merror[0m] [0m[0m                                                        ^[0m
-[0m[[0m[31merror[0m] [0m[0mone error found[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:36:88: not found: value from_utc_timestamp[0m
+[0m[[0m[31merror[0m] [0m[0m        val reddit_comment = loadDFParquet(rcLoader, rcParquetPath).withColumn("time", from_utc_timestamp(from_unixtime(col("utc")), "PDT"))[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                                       ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:36:107: not found: value from_unixtime[0m
+[0m[[0m[31merror[0m] [0m[0m        val reddit_comment = loadDFParquet(rcLoader, rcParquetPath).withColumn("time", from_utc_timestamp(from_unixtime(col("utc")), "PDT"))[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                                                          ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:38:79: not found: value from_utc_timestamp[0m
+[0m[[0m[31merror[0m] [0m[0m        val bitcoin_price = loadDFCsv(bpLoader, bpCsvPath).withColumn("time", from_utc_timestamp(from_unixtime(col("created_utc")), "PDT"))[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                              ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:38:98: not found: value from_unixtime[0m
+[0m[[0m[31merror[0m] [0m[0m        val bitcoin_price = loadDFCsv(bpLoader, bpCsvPath).withColumn("time", from_utc_timestamp(from_unixtime(col("created_utc")), "PDT"))[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                                                 ^[0m
+[0m[[0m[31merror[0m] [0m[0mfour errors found[0m
