@@ -16,34 +16,37 @@ object BitFluc
     {   
         val spark = getSparkSession()
         
-        val rcLoader = new DataLoader(spark)
         val rcSchema = getRCSchema()
+        val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(rcLoader)
 
-        val bpLoader = new DataLoader(spark)
         val bpSchema = getBPSchema()
+        val bpLoader = new DataLoader(spark, bpSchema)
+
         val bpPreprocessor = new Preprocessor(bpLoader)
         //val inputPath = "s3a://gary-bitcoin-avro/*"
         //val inputPath1 = "s3a://gary-reddit-parquet/comments/*.snappy.parquet"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comments/*"
-        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/1coinUSD.csv"
-        val bpParquetPath = "s3a://gary-bitcoin-price-parquet/bitcoin"
+        val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00000*"
+        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
 
+        //bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)
 
-        bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)
-
-        /*val rcDF = loadDFParquet(rcLoader, rcPath, rcSchema)
+        val rcDF = loadDFJson(rcLoader, rcJsonPath)
         val rc_time_body = rcDF.select("created_utc", "body")
-        val bpDF = loadDFCsv(bpLoader, bpPath, bpSchema)
-        val bp_time_price = bpDF.select("utc","price")*/
+        val bpDF = loadDFCsv(bpLoader, bpCsvPath)
+        val bp_time_price = bpDF.select("utc","price")
 
         //bpLoader.writeParquet(outputPath)
   
         //rc_time_body.show(3)
         //bp_time_price.show(3)
-        //val rbJoinDF = redditDF.withColumn("utc", col("created_utc")).join(bitcoinDF.withColumn("utc", col("utc")), on="utc")
+        //val rbJoinDF = rcDF.withColumn("utc", col("created_utc")).join(bpDF.withColumn("utc", col("utc")), on="utc")
 
-        //rbJoinDF.show(5)
+        val rbJoinDF = rcDF.join(bpDF, rcDF("created_utc") === bpDF("utc"), "outer")
+
+        rbJoinDF.explain()
+        rbJoinDF.show(5)
 
         //dataLoader.loadURL(url)
         
@@ -62,29 +65,25 @@ object BitFluc
     }
 
     // load DataFrame from a parquet file
-    def loadDFParquet(loader : DataLoader, path : String, schema: StructType): Dataset[Row] = 
+    def loadDFParquet(loader : DataLoader, path : String): Dataset[Row] = 
     {
-       loader.loadSchema(schema)
        return loader.loadParquet(path).getData()
     }
 
     // load DataFrame from a json file   
-    def loadDFJson(loader : DataLoader, path : String, schema: StructType): Dataset[Row] =
+    def loadDFJson(loader : DataLoader, path : String): Dataset[Row] =
     {
-       loader.loadSchema(schema)
        return loader.loadJson(path).getData()
     }
 
     // load DataFrame from a csv file
-    def loadDFCsv(loader : DataLoader, path : String, schema: StructType): Dataset[Row] =
+    def loadDFCsv(loader : DataLoader, path : String): Dataset[Row] =
     {
-       loader.loadSchema(schema)
        return loader.loadCsv(path).getData()  
     }
 
-    def loadDFAvro(loader : DataLoader, path : String, schema: StructType): Dataset[Row] =
+    def loadDFAvro(loader : DataLoader, path : String): Dataset[Row] =
     {
-       loader.loadSchema(schema)
        return loader.loadAvro(path).getData()                                                                  
     }
 

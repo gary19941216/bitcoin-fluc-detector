@@ -3,10 +3,9 @@ package dataload
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.{StructField, StructType}
 
-class DataLoader(val spark: SparkSession)
+class DataLoader(val spark: SparkSession, val schema : StructType)
 {
     private var data : Dataset[Row] = _
-    private var schema : StructType = _
 
     //load csv data from file
     def loadCsv(path: String) : DataLoader = 
@@ -58,13 +57,7 @@ class DataLoader(val spark: SparkSession)
     def show(num: Int) : Unit = 
     {
         data.show(num)
-    }
-    
-    //load the schema
-    def loadSchema(schema: StructType) : Unit = 
-    {
-        this.schema = schema
-    }
+    } 
 
     //take only the specify numbers of row
     def take(num: Int) : Array[Row] = 
