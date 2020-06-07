@@ -18,22 +18,21 @@ object BitFluc
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(rcLoader)
+        val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-0012*"
+        datePreprocess(rcPreprocessor)
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
         val bpPreprocessor = new Preprocessor(bpLoader)
-        //val inputPath = "s3a://gary-bitcoin-avro/*"
-        //val inputPath1 = "s3a://gary-reddit-parquet/comments/*.snappy.parquet"
-        val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-0012*"
         val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/*"
-        //val bpParquetPath = "s3a://gary-bitcoin-price-parquet/bitcoin/*"
+        datePreprocess(bpPreprocessor)
 
         //bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)
 
-        val reddit_comment = loadDFParquet(rcLoader, rcParquetPath)//.withColumn("time", from_utc_timestamp(from_unixtime(col("utc")), "PDT"))
+        val reddit_comment = loadDFParquet(rcLoader, rcParquetPath)
         reddit_comment.createOrReplaceTempView("reddit_comment")
-        val bitcoin_price = loadDFCsv(bpLoader, bpCsvPath)//.withColumn("time", from_utc_timestamp(from_unixtime(col("created_utc")), "PDT"))
+        val bitcoin_price = loadDFCsv(bpLoader, bpCsvPath)
         bitcoin_price.createOrReplaceTempView("bitcoin_price")
 
         
@@ -50,28 +49,43 @@ object BitFluc
 
     }
 
-    // load DataFrame from a parquet file
-    def loadDFParquet(loader : DataLoader, path : String): DataFrame = 
+    // preprocess unix time and create new column
+    def datePreprocess(preprocessor: Preprocessor): Unit = 
     {
-       return loader.loadParquet(path).getData()
+        // create new column with PDT time
+        preprocessor.convertUnixToPDT() 
+
+        // create new column year, month, hour
+        preprocessor.createYearMonthHour()
+    }
+
+    def loadPreprocess(): Unit = 
+    {
+        
+    }
+
+    // load DataFrame from a parquet file
+    /*def loadDFParquet(loader: DataLoader, path: String): DataFrame = 
+    {
+       loader.loadParquet(path)
     }
 
     // load DataFrame from a json file   
-    def loadDFJson(loader : DataLoader, path : String): DataFrame =
+    def loadDFJson(loader: DataLoader, path: String): DataFrame =
     {
        return loader.loadJson(path).getData()
     }
 
     // load DataFrame from a csv file
-    def loadDFCsv(loader : DataLoader, path : String): DataFrame =
+    def loadDFCsv(loader: DataLoader, path: String): DataFrame =
     {
        return loader.loadCsv(path).getData()  
     }
 
-    def loadDFAvro(loader : DataLoader, path : String): DataFrame =
+    def loadDFAvro(loader: DataLoader, path: String): DataFrame =
     {
        return loader.loadAvro(path).getData()                                                                  
-    }
+    }*/
 
     // get SparkSession with configuration
     def getSparkSession(): SparkSession =  
@@ -90,7 +104,7 @@ object BitFluc
     def getBPSchema(): StructType = 
     {
         val schema = StructType(Seq(
-    			StructField("utc", StringType, true),
+    			StructField("created_utc", StringType, true),
     			StructField("price", FloatType, true),
     			StructField("volume", FloatType, true)))
 	
