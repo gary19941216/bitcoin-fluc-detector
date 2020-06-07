@@ -3,8 +3,9 @@ package bitfluc
 import sys.process._
 import java.net.URL
 import java.io.File
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql._
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.functions.{col, udf}
 import org.apache.hadoop.fs._
 import dataload.DataLoader
 
@@ -13,13 +14,29 @@ object BitFluc
     def main(args: Array[String])
     {   
         val spark = getSparkSession()
-        val dataLoader = new DataLoader(spark)
+        val rcLoader = new DataLoader(spark)
+        val rcPath = "s3a://gary-reddit-parquet/comments/*"
+        val rcSchema = getRCSchema()
 
-        //val inputPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
-        val inputPath = "s3a://gary-bitcoin-avro/*"
-        //val inputPath = "s3a://gary-reddit-json/comments/RC_2014*.json"
+        val bpLoader = new DataLoader(spark)
+        val bpPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/1coinUSD.csv"
+        val bpSchema = getBPSchema()
+        //val inputPath = "s3a://gary-bitcoin-avro/*"
         //val inputPath1 = "s3a://gary-reddit-parquet/comments/*.snappy.parquet"
-        val outputPath = "s3a://gary-bitcoin-transaction-parquet/transaction"
+        val outputPath = "s3a://gary-bitcoin-price-parquet/bitcoin"
+
+        val rcDF = loadDFParquet(rcLoader, rcPath, rcSchema)
+        val rc_time_body = rcDF.select("created_utc", "body")
+        val bpDF = loadDFCsv(bpLoader, bpPath, bpSchema)
+        val bp_time_price = bpDF.select("utc","price")
+
+        //bpLoader.writeParquet(outputPath)
+  
+        //rc_time_body.show(3)
+        //bp_time_price.show(3)
+        //val rbJoinDF = redditDF.withColumn("utc", col("created_utc")).join(bitcoinDF.withColumn("utc", col("utc")), on="utc")
+
+        //rbJoinDF.show(5)
 
         //dataLoader.loadURL(url)
         
@@ -27,7 +44,7 @@ object BitFluc
 
         //inputrdd.foreach{ x => { println(x) } }
 	//dataLoader.loadSchema(getBPSchema())
-        dataLoader.loadAvro(inputPath).writeParquet(outputPath) 
+        //dataLoader.loadCsv(inputPath).writeParquet(outputPath) 
         //dataLoader.loadAvro(inputPath)
         
 
@@ -37,13 +54,43 @@ object BitFluc
         //dataLoader.writeParquet(outputPath)                                
     }
 
+    // load DataFrame from a parquet file
+    def loadDFParquet(loader : DataLoader, path : String, schema: StructType): Dataset[Row] = 
+    {
+       loader.loadSchema(schema)
+       return loader.loadParquet(path).getData()
+    }
+
+    // load DataFrame from a json file   
+    def loadDFJson(loader : DataLoader, path : String, schema: StructType): Dataset[Row] =
+    {
+       loader.loadSchema(schema)
+       return loader.loadJson(path).getData()
+    }
+
+    // load DataFrame from a csv file
+    def loadDFCsv(loader : DataLoader, path : String, schema: StructType): Dataset[Row] =
+    {
+       loader.loadSchema(schema)
+       return loader.loadCsv(path).getData()  
+    }
+
+    def loadDFAvro(loader : DataLoader, path : String, schema: StructType): Dataset[Row] =
+    {
+       loader.loadSchema(schema)
+       return loader.loadAvro(path).getData()                                                                  
+    }
+
+    // get SparkSession with configuration
     def getSparkSession(): SparkSession =  
     {
 	val spark = SparkSession.builder
           .appName("Bit Fluc")
-          .master("spark://10.0.0.11:7077")
+          //.master("spark://10.0.0.11:7077")
           .config("spark.default.parallelism", 20)  
-          .getOrCreate()	
+          .getOrCreate()
+
+        spark.sparkContext.setLogLevel("ERROR")
 	return spark 
     }
 

@@ -13,7 +13,7 @@ class DataLoader(val spark: SparkSession)
     def loadCsv(path: String) : DataLoader = 
     {   
         //csv file with no header
-        data = spark.read.schema(schema).csv(path)//schema(schema).option("header","false").csv(path)
+        data = spark.read.schema(schema).csv(path)
         return this
     }
 
