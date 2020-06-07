@@ -1,5 +1,9 @@
 [0m[[0m[0mdebug[0m] [0m[0mPackaging /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/bit_fluc_2.11-1.0.jar ...[0m
 [0m[[0m[0mdebug[0m] [0m[0mInput file mappings:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	preprocess[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/preprocess[0m
+[0m[[0m[0mdebug[0m] [0m[0m	preprocess/Preprocessor.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/preprocess/Preprocessor.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	dataload[0m
 [0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/dataload[0m
 [0m[[0m[0mdebug[0m] [0m[0m	dataload/DataLoader.class[0m

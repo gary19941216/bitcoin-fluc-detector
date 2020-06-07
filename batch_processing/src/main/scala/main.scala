@@ -8,27 +8,34 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.hadoop.fs._
 import dataload.DataLoader
+import preprocess.Preprocessor
 
 object BitFluc
 {
     def main(args: Array[String])
     {   
         val spark = getSparkSession()
+        
         val rcLoader = new DataLoader(spark)
-        val rcPath = "s3a://gary-reddit-parquet/comments/*"
         val rcSchema = getRCSchema()
+        val rcPreprocessor = new Preprocessor(rcLoader)
 
         val bpLoader = new DataLoader(spark)
-        val bpPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/1coinUSD.csv"
         val bpSchema = getBPSchema()
+        val bpPreprocessor = new Preprocessor(bpLoader)
         //val inputPath = "s3a://gary-bitcoin-avro/*"
         //val inputPath1 = "s3a://gary-reddit-parquet/comments/*.snappy.parquet"
-        val outputPath = "s3a://gary-bitcoin-price-parquet/bitcoin"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comments/*"
+        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/1coinUSD.csv"
+        val bpParquetPath = "s3a://gary-bitcoin-price-parquet/bitcoin"
 
-        val rcDF = loadDFParquet(rcLoader, rcPath, rcSchema)
+
+        bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)
+
+        /*val rcDF = loadDFParquet(rcLoader, rcPath, rcSchema)
         val rc_time_body = rcDF.select("created_utc", "body")
         val bpDF = loadDFCsv(bpLoader, bpPath, bpSchema)
-        val bp_time_price = bpDF.select("utc","price")
+        val bp_time_price = bpDF.select("utc","price")*/
 
         //bpLoader.writeParquet(outputPath)
   

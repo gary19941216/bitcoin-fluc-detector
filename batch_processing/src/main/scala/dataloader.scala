@@ -1,7 +1,6 @@
 package dataload
 
 import org.apache.spark.sql._
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types.{StructField, StructType}
 
 class DataLoader(val spark: SparkSession)
