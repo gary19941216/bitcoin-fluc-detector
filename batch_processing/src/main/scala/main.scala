@@ -22,46 +22,28 @@ object BitFluc
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
-
         val bpPreprocessor = new Preprocessor(bpLoader)
         //val inputPath = "s3a://gary-bitcoin-avro/*"
         //val inputPath1 = "s3a://gary-reddit-parquet/comments/*.snappy.parquet"
         val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
         val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00000*"
-        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
+        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/*"
+        val bpParquetPath = "s3a://gary-bitcoin-price-parquet/bitcoin/*"
 
         //bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)
 
-        val rcDF = loadDFJson(rcLoader, rcJsonPath)
-        val rc_time_body = rcDF.select("created_utc", "body")
-        val bpDF = loadDFCsv(bpLoader, bpCsvPath)
+        //val rcDF = loadDFJson(rcLoader, rcJsonPath)
+        //val rc_time_body = rcDF.select("created_utc", "body")
+        val bpDF = loadDFCsv(bpLoader, bpParquetPath)
         val bp_time_price = bpDF.select("utc","price")
 
-        //bpLoader.writeParquet(outputPath)
-  
-        //rc_time_body.show(3)
-        //bp_time_price.show(3)
-        //val rbJoinDF = rcDF.withColumn("utc", col("created_utc")).join(bpDF.withColumn("utc", col("utc")), on="utc")
+        bpDF.show(10)
 
-        val rbJoinDF = rcDF.join(bpDF, rcDF("created_utc") === bpDF("utc"), "outer")
+        /*val rbJoinDF = rcDF.join(bpDF, rcDF("created_utc") === bpDF("utc"), "outer")
 
         rbJoinDF.explain()
-        rbJoinDF.show(5)
+        rbJoinDF.show(5)*/
 
-        //dataLoader.loadURL(url)
-        
-        //dataLoader.showContent() 
-
-        //inputrdd.foreach{ x => { println(x) } }
-	//dataLoader.loadSchema(getBPSchema())
-        //dataLoader.loadCsv(inputPath).writeParquet(outputPath) 
-        //dataLoader.loadAvro(inputPath)
-        
-
-        //dataLoader.loadParquet(inputPath1).show(3)
-        //dataLoader.printSchema()
-        //dataLoader.showCotent()
-        //dataLoader.writeParquet(outputPath)                                
     }
 
     // load DataFrame from a parquet file
