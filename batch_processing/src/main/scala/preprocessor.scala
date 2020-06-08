@@ -2,6 +2,7 @@ package preprocess
 
 import dataload.DataLoader
 import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
 
 class Preprocessor(val dataloader : DataLoader)
 {
@@ -21,12 +22,36 @@ class Preprocessor(val dataloader : DataLoader)
     // convert unix time to PDT
     def convertUnixToPDT() : Unit = 
     {
-        dataloader.updateData(dataloader.getData().withColumn("time", from_utc_timestamp(from_unixtime(col("created_utc")), "PDT")))
+        dataloader.updateData(dataloader.getData()
+                              .withColumn("time", from_utc_timestamp(from_unixtime(col("created_utc")), "PDT")))
     }
 
-    // create year, month, hour from PDT time
-    def createYearMonthHour() : Unit = 
+    // seperate PDT time to smaller component
+    def seperatePDT() : Unit = 
     {
-        dataloader.updateData(dataloader.getData().withColumn("year", year(col("time"))).withColumn("month", month(col("time"))).withColumn("hour", hour(col("time"))) 
+        dataloader.updateData(dataloader.getData()
+                              .withColumn("year", year(col("time")))
+                              .withColumn("month", month(col("time")))
+                              .withColumn("day", dayofmonth(col("time")))
+                              .withColumn("date", to_date(col("time")))
+                              .withColumn("hour", hour(col("time")))) 
+    }
+
+    def filterSubreddit() : Unit = 
+    {
+        dataloader.getData()
+          .filter(col("subreddit") isin("CryptoCurrency", "CyptoCurrencyTrading", "CyptoCurrencies"))
+    }
+
+    def filterKeyword() : Unit = 
+    {
+        dataloader.getData()
+          .filter(col("body").like("bitcoin"))
+    }
+
+    def removeEmpty(): Unit = 
+    {
+        dataloader.updateData(dataloader.getData()
+                              .filter(length(col("body")) > 0))
     }
 }

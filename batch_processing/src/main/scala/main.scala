@@ -19,29 +19,29 @@ object BitFluc
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(rcLoader)
         val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-0012*"
-        datePreprocess(rcPreprocessor)
+        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-0011*"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
         val bpPreprocessor = new Preprocessor(bpLoader)
-        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/*"
-        datePreprocess(bpPreprocessor)
+        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
 
-        //bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)
+	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet")
+	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-        val reddit_comment = loadDFParquet(rcLoader, rcParquetPath)
+        val reddit_comment = rcLoader.getData()
+        reddit_comment.show(5)
         reddit_comment.createOrReplaceTempView("reddit_comment")
-        val bitcoin_price = loadDFCsv(bpLoader, bpCsvPath)
+        val bitcoin_price = bpLoader.getData()
+        bitcoin_price.show(5)
         bitcoin_price.createOrReplaceTempView("bitcoin_price")
 
         
 
-        //val rbJoinDF = rcTB.join(bpTP, rcTB("created_utc") === bpTP("utc"), "inner")
         /*val time_body_price = spark.sql("""
-        SELECT BP.utc, RC.body, BP.price 
+        SELECT BP.date, BP.hour, RC.body, BP.price 
         FROM reddit_comment as RC
-        FULL OUTER JOIN bitcoin_price as BP ON RC.created_utc=BP.created_utc
+        JOIN bitcoin_price as BP ON RC.date=BP.date
         """)
 
         time_body_price.explain()
@@ -52,40 +52,51 @@ object BitFluc
     // preprocess unix time and create new column
     def datePreprocess(preprocessor: Preprocessor): Unit = 
     {
-        // create new column with PDT time
         preprocessor.convertUnixToPDT() 
-
-        // create new column year, month, hour
-        preprocessor.createYearMonthHour()
+        preprocessor.seperatePDT()
     }
 
-    def loadPreprocess(): Unit = 
+    // find comments in only relevant subreddit
+    def subredditPreprocess(preprocessor: Preprocessor): Unit = 
     {
-        
+        preprocessor.filterSubreddit()
     }
 
-    // load DataFrame from a parquet file
-    /*def loadDFParquet(loader: DataLoader, path: String): DataFrame = 
+    // find comments that only contain keywords
+    def bodyPreprocess(preprocessor: Preprocessor): Unit =
     {
-       loader.loadParquet(path)
+        preprocessor.filterKeyword()
+        preprocessor.removeEmpty()
     }
 
-    // load DataFrame from a json file   
-    def loadDFJson(loader: DataLoader, path: String): DataFrame =
+    // load reddit comment data and preprocess
+    def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String): Unit = 
     {
-       return loader.loadJson(path).getData()
+        load(preprocessor, path, format)
+        datePreprocess(preprocessor)
+        subredditPreprocess(preprocessor)
+        bodyPreprocess(preprocessor)
     }
 
-    // load DataFrame from a csv file
-    def loadDFCsv(loader: DataLoader, path: String): DataFrame =
+    // load bitcoin price data and preprocess
+    def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String): Unit =
     {
-       return loader.loadCsv(path).getData()  
+        load(preprocessor, path, format)
+        datePreprocess(preprocessor)
     }
 
-    def loadDFAvro(loader: DataLoader, path: String): DataFrame =
+    def load(preprocessor: Preprocessor, path: String, format: String): Unit =
     {
-       return loader.loadAvro(path).getData()                                                                  
-    }*/
+        if(format == "json"){
+          preprocessor.dataloader.loadJson(path)
+        } else if(format == "parquet"){
+          preprocessor.dataloader.loadParquet(path)
+        } else if(format == "csv"){
+          preprocessor.dataloader.loadCsv(path)
+        } else {
+          preprocessor.dataloader.loadAvro(path)
+        } 
+    }
 
     // get SparkSession with configuration
     def getSparkSession(): SparkSession =  
