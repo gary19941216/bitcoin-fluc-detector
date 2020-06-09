@@ -21,12 +21,12 @@ object BitFluc
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(rcLoader)
         val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00111"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00115"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
         val bpPreprocessor = new Preprocessor(bpLoader)
-        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/*"
+        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/anxhkUSD.csv/*"
 
 	//rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet")
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
@@ -40,9 +40,9 @@ object BitFluc
         val bitcoin_price = bpLoader.getData()
         /*bitcoin_price.show(5)
         bitcoin_price.createOrReplaceTempView("bitcoin_price")*/
-        //dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin", "cycling")
+        dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin", "cycling")
         val bpDF = dbconnect.readFromCassandra("bitcoin", "cycling")
-        bpDF.show(5)
+        print(bpDF.count())
         /*val time_body_price = spark.sql("""
         SELECT BP.date, BP.hour, RC.body, BP.price 
         FROM reddit_comment AS RC
