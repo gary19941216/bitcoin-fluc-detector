@@ -13,33 +13,33 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
     {   
         //csv file with no header
         data = spark.read.schema(schema).csv(path)
-        return this
+        this
     }
 
     //load json data from file
     def loadJson(path: String) : DataLoader =
     {    
         data = spark.read.schema(schema).json(path)
-        return this
+        this
     }
 
     //load avro data from file
     def loadAvro(path: String) : DataLoader = 
     {
         data = spark.read.format("avro").load(path)
-        return this
+        this
     }
 
     def loadParquet(path: String) : DataLoader = 
     {
         data = spark.read.schema(schema).parquet(path)
-        return this
+        this
     }
 
     //retrieve data
     def getData() : DataFrame = 
     {
-        return data
+        data
     }
 
     def updateData(data: DataFrame) : Unit =
@@ -68,7 +68,7 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
     //take only the specify numbers of row
     def take(num: Int) : Array[Row] = 
     {
-        return data.take(num)
+        data.take(num)
     }
     
 }

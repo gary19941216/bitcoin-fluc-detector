@@ -121,7 +121,7 @@ object BitFluc
         spark.sparkContext.setLogLevel("ERROR")
 
 
-        return spark 
+        spark 
     }
 
     // get bitcoin price schema
@@ -132,7 +132,7 @@ object BitFluc
     			StructField("price", FloatType, true),
     			StructField("volume", FloatType, true)))
 	
-	return schema
+	schema
     }
 
     // get reddit comment schema
@@ -162,7 +162,7 @@ object BitFluc
 			StructField("subreddit", StringType, true),
 			StructField("subreddit_id", StringType, true),
 			StructField("ups", LongType, true)))    
-	return schema
+	schema
     }
 }
 
