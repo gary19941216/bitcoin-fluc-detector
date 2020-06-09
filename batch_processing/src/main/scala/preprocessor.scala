@@ -40,9 +40,16 @@ class Preprocessor(val dataloader : DataLoader)
     // filter by specific subreddit
     def filterSubreddit() : Unit = 
     {
-        val list = List("CryptoCurrency", "CyptoCurrencyTrading", "CyptoCurrencies") 
+        /*val list = List("CryptoCurrency", "CyptoCurrencyTrading", "CyptoCurrencies") 
         dataloader.updateData(dataloader.getData()
-                              .filter(col("subreddit").isin(list:_*)))
+                              .filter(col("subreddit").isin(list:_*)))*/
+       dataloader.getData().createOrReplaceTempView("reddit_comment")
+       dataloader.updateData(dataloader.spark.sql("""
+                              SELECT * FROM reddit_comment
+                              WHERE LOWER(subreddit) LIKE "%bitcoin%"
+                                 OR LOWER(subreddit) LIKE "%cryptocurrency%"
+				 OR LOWER(subreddit) LIKE "%blockchain%"
+                              """))
     }
 
     // filter by specified keyword
@@ -53,8 +60,10 @@ class Preprocessor(val dataloader : DataLoader)
         //                      .filter(col("body").like("%bitcoin%")))
         dataloader.updateData(dataloader.spark.sql("""
                               SELECT * FROM reddit_comment
-                              WHERE body LIKE "%bitcoin%"
-                                 OR body LIKE "%cryptocurrency%"
+                              WHERE LOWER(body) LIKE "%bitcoin%"
+                                 OR LOWER(body) LIKE "%cryptocurrency%"
+				 OR LOWER(body) LIKE "%distributed%ledger%"
+				 OR LOWER(body) LIKE "%blockchain%"
                               """))
     }
 

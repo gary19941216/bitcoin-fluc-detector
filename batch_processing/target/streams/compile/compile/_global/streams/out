@@ -1,12 +1,4 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:43:35: not enough arguments for method writeToCassandra: (data: org.apache.spark.sql.DataFrame, table: String, keyspace: String)Unit.[0m
-[0m[[0m[31merror[0m] [0m[0mUnspecified value parameters table, keyspace.[0m
-[0m[[0m[31merror[0m] [0m[0m        dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"))[0m
-[0m[[0m[31merror[0m] [0m[0m                                  ^[0m
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:44:47: not enough arguments for method readFromCassandra: (table: String, keyspace: String)org.apache.spark.sql.DataFrame.[0m
-[0m[[0m[31merror[0m] [0m[0mUnspecified value parameters table, keyspace.[0m
-[0m[[0m[31merror[0m] [0m[0m        val bpDF = dbconnect.readFromCassandra()[0m
-[0m[[0m[31merror[0m] [0m[0m                                              ^[0m
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:58:9: not found: value data[0m
-[0m[[0m[31merror[0m] [0m[0m        data.read[0m
-[0m[[0m[31merror[0m] [0m[0m        ^[0m
-[0m[[0m[31merror[0m] [0m[0mthree errors found[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:35:32: value show is not a member of Array[org.apache.spark.sql.Row][0m
+[0m[[0m[31merror[0m] [0m[0m        reddit_comment.take(5).show(5)[0m
+[0m[[0m[31merror[0m] [0m[0m                               ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m

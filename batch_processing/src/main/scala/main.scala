@@ -20,37 +20,39 @@ object BitFluc
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(rcLoader)
-        val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
+        val rcJsonPath = "s3a://gary-reddit-json/comments/*"
         val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00115"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
         val bpPreprocessor = new Preprocessor(bpLoader)
-        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/anxhkUSD.csv/*"
+        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
 
-	//rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet")
+	rcloadPreprocess(rcPreprocessor, rcJsonPath, "json")
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-        /*val reddit_comment = rcLoader.getData()
+        val reddit_comment = rcLoader.getData()
         reddit_comment.show(5)
         reddit_comment.createOrReplaceTempView("reddit_comment")
 
-        writeToCassandra(reddit_comment)*/
+        //writeToCassandra(reddit_comment)*/
 
         val bitcoin_price = bpLoader.getData()
-        /*bitcoin_price.show(5)
-        bitcoin_price.createOrReplaceTempView("bitcoin_price")*/
-        dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin", "cycling")
+        bitcoin_price.show(5)
+        bitcoin_price.createOrReplaceTempView("bitcoin_price")
+        
+        /*dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin", "cycling")
         val bpDF = dbconnect.readFromCassandra("bitcoin", "cycling")
-        print(bpDF.count())
-        /*val time_body_price = spark.sql("""
+        print(bpDF.count())*/
+        
+        val time_body_price = spark.sql("""
         SELECT BP.date, BP.hour, RC.body, BP.price 
         FROM reddit_comment AS RC
         JOIN bitcoin_price AS BP ON RC.date=BP.date
         """)
 
         time_body_price.explain()
-        time_body_price.show(20)*/
+        time_body_price.show(20)
 
     }
 
@@ -79,7 +81,7 @@ object BitFluc
     {
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
-        //subredditPreprocess(preprocessor)
+        subredditPreprocess(preprocessor)
         bodyPreprocess(preprocessor)
     }
 
