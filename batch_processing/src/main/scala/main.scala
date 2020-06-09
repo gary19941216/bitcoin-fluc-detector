@@ -1,72 +1,109 @@
 package bitfluc
 
-import sys.process._
-import java.net.URL
-import java.io.File
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.hadoop.fs._
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions._
 import dataload.DataLoader
 import preprocess.Preprocessor
+import dbconnector.DBConnector
 
 object BitFluc
 {
     def main(args: Array[String])
     {   
         val spark = getSparkSession()
+        val dbconnect = new DBConnector(spark)
         
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(rcLoader)
+        val rcJsonPath = "s3a://gary-reddit-json/comments/*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00115"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
         val bpPreprocessor = new Preprocessor(bpLoader)
-        //val inputPath = "s3a://gary-bitcoin-avro/*"
-        //val inputPath1 = "s3a://gary-reddit-parquet/comments/*.snappy.parquet"
-        val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00000*"
-        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/*"
-        val bpParquetPath = "s3a://gary-bitcoin-price-parquet/bitcoin/*"
+        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
 
-        //bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)
+	rcloadPreprocess(rcPreprocessor, rcJsonPath, "json")
+	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-        //val rcDF = loadDFJson(rcLoader, rcJsonPath)
-        //val rc_time_body = rcDF.select("created_utc", "body")
-        val bpDF = loadDFCsv(bpLoader, bpParquetPath)
-        val bp_time_price = bpDF.select("utc","price")
+        val reddit_comment = rcLoader.getData()
+        reddit_comment.show(5)
+        reddit_comment.createOrReplaceTempView("reddit_comment")
 
-        bpDF.show(10)
+        //writeToCassandra(reddit_comment)*/
 
-        /*val rbJoinDF = rcDF.join(bpDF, rcDF("created_utc") === bpDF("utc"), "outer")
+        val bitcoin_price = bpLoader.getData()
+        bitcoin_price.show(5)
+        bitcoin_price.createOrReplaceTempView("bitcoin_price")
+        
+        /*dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin", "cycling")
+        val bpDF = dbconnect.readFromCassandra("bitcoin", "cycling")
+        print(bpDF.count())*/
+        
+        val time_body_price = spark.sql("""
+        SELECT BP.date, BP.hour, RC.body, BP.price 
+        FROM reddit_comment AS RC
+        JOIN bitcoin_price AS BP ON RC.date=BP.date
+        """)
 
-        rbJoinDF.explain()
-        rbJoinDF.show(5)*/
+        time_body_price.explain()
+        time_body_price.show(20)
 
     }
 
-    // load DataFrame from a parquet file
-    def loadDFParquet(loader : DataLoader, path : String): Dataset[Row] = 
+    // preprocess unix time and create new column
+    def datePreprocess(preprocessor: Preprocessor): Unit = 
     {
-       return loader.loadParquet(path).getData()
+        preprocessor.convertUnixToPDT() 
+        preprocessor.seperatePDT()
     }
 
-    // load DataFrame from a json file   
-    def loadDFJson(loader : DataLoader, path : String): Dataset[Row] =
+    // find comments in only relevant subreddit
+    def subredditPreprocess(preprocessor: Preprocessor): Unit = 
     {
-       return loader.loadJson(path).getData()
+        preprocessor.filterSubreddit()
     }
 
-    // load DataFrame from a csv file
-    def loadDFCsv(loader : DataLoader, path : String): Dataset[Row] =
+    // find comments that only contain keywords
+    def bodyPreprocess(preprocessor: Preprocessor): Unit =
     {
-       return loader.loadCsv(path).getData()  
+        preprocessor.filterKeyword()
+        preprocessor.removeEmpty()
     }
 
-    def loadDFAvro(loader : DataLoader, path : String): Dataset[Row] =
+    // load reddit comment data and preprocess
+    def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String): Unit = 
     {
-       return loader.loadAvro(path).getData()                                                                  
+        load(preprocessor, path, format)
+        datePreprocess(preprocessor)
+        subredditPreprocess(preprocessor)
+        bodyPreprocess(preprocessor)
+    }
+
+    // load bitcoin price data and preprocess
+    def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String): Unit =
+    {
+        load(preprocessor, path, format)
+        datePreprocess(preprocessor)
+    }
+
+    // load data for different format
+    def load(preprocessor: Preprocessor, path: String, format: String): Unit =
+    {
+        if(format == "json"){
+          preprocessor.dataloader.loadJson(path)
+        } else if(format == "parquet"){
+          preprocessor.dataloader.loadParquet(path)
+        } else if(format == "csv"){
+          preprocessor.dataloader.loadCsv(path)
+        } else {
+          preprocessor.dataloader.loadAvro(path)
+        } 
     }
 
     // get SparkSession with configuration
@@ -76,17 +113,24 @@ object BitFluc
           .appName("Bit Fluc")
           //.master("spark://10.0.0.11:7077")
           .config("spark.default.parallelism", 20)  
+          .config("spark.cassandra.connection.host", "10.0.0.5")
+          .config("spark.cassandra.auth.username", "cassandra")            
+          .config("spark.cassandra.auth.password", "cassandra") 
+	  .config("spark.cassandra.connection.port","9042")
+          .config("spark.cassandra.output.consistency.level","ONE")
           .getOrCreate()
 
         spark.sparkContext.setLogLevel("ERROR")
-	return spark 
+
+
+        return spark 
     }
 
     // get bitcoin price schema
     def getBPSchema(): StructType = 
     {
         val schema = StructType(Seq(
-    			StructField("utc", StringType, true),
+    			StructField("created_utc", StringType, true),
     			StructField("price", FloatType, true),
     			StructField("volume", FloatType, true)))
 	

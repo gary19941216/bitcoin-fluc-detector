@@ -2,10 +2,11 @@ package dataload
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.{StructField, StructType}
+import org.apache.spark.sql.DataFrame
 
 class DataLoader(val spark: SparkSession, val schema : StructType)
 {
-    private var data : Dataset[Row] = _
+    private var data : DataFrame = _
 
     //load csv data from file
     def loadCsv(path: String) : DataLoader = 
@@ -36,9 +37,14 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
     }
 
     //retrieve data
-    def getData() : Dataset[Row] = 
+    def getData() : DataFrame = 
     {
         return data
+    }
+
+    def updateData(data: DataFrame) : Unit =
+    {
+        this.data = data
     }
 
     //transform from json to parquet

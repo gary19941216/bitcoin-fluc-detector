@@ -1,4 +1,4 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:34:57: not found: value bpParquetPath[0m
-[0m[[0m[31merror[0m] [0m[0m        bpPreprocessor.transformCsvToParquet(bpCsvPath, bpParquetPath)[0m
-[0m[[0m[31merror[0m] [0m[0m                                                        ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:35:32: value show is not a member of Array[org.apache.spark.sql.Row][0m
+[0m[[0m[31merror[0m] [0m[0m        reddit_comment.take(5).show(5)[0m
+[0m[[0m[31merror[0m] [0m[0m                               ^[0m
 [0m[[0m[31merror[0m] [0m[0mone error found[0m
