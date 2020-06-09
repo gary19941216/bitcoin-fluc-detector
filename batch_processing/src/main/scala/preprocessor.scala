@@ -37,18 +37,28 @@ class Preprocessor(val dataloader : DataLoader)
                               .withColumn("hour", hour(col("time")))) 
     }
 
+    // filter by specific subreddit
     def filterSubreddit() : Unit = 
     {
-        dataloader.getData()
-          .filter(col("subreddit") isin("CryptoCurrency", "CyptoCurrencyTrading", "CyptoCurrencies"))
+        val list = List("CryptoCurrency", "CyptoCurrencyTrading", "CyptoCurrencies") 
+        dataloader.updateData(dataloader.getData()
+                              .filter(col("subreddit").isin(list:_*)))
     }
 
+    // filter by specified keyword
     def filterKeyword() : Unit = 
     {
-        dataloader.getData()
-          .filter(col("body").like("bitcoin"))
+        dataloader.getData().createOrReplaceTempView("reddit_comment")
+        //dataloader.updateData(dataloader.getData()
+        //                      .filter(col("body").like("%bitcoin%")))
+        dataloader.updateData(dataloader.spark.sql("""
+                              SELECT * FROM reddit_comment
+                              WHERE body LIKE "%bitcoin%"
+                                 OR body LIKE "%cryptocurrency%"
+                              """))
     }
 
+    // remove empty body
     def removeEmpty(): Unit = 
     {
         dataloader.updateData(dataloader.getData()

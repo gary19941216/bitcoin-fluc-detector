@@ -42,9 +42,9 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
         return data
     }
 
-    def updateData(newData: DataFrame) : Unit =
+    def updateData(data: DataFrame) : Unit =
     {
-        data = newData
+        this.data = data
     }
 
     //transform from json to parquet

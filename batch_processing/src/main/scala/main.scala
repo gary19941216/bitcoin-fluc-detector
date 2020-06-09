@@ -8,40 +8,45 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import dataload.DataLoader
 import preprocess.Preprocessor
+import dbconnector.DBConnector
 
 object BitFluc
 {
     def main(args: Array[String])
     {   
         val spark = getSparkSession()
+        val dbconnect = new DBConnector(spark)
         
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(rcLoader)
         val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-0011*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comments/part-00111"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
         val bpPreprocessor = new Preprocessor(bpLoader)
-        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
+        val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/1coinUSD.csv/*"
 
-	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet")
+	//rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet")
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-        val reddit_comment = rcLoader.getData()
+        /*val reddit_comment = rcLoader.getData()
         reddit_comment.show(5)
         reddit_comment.createOrReplaceTempView("reddit_comment")
+
+        writeToCassandra(reddit_comment)*/
+
         val bitcoin_price = bpLoader.getData()
-        bitcoin_price.show(5)
-        bitcoin_price.createOrReplaceTempView("bitcoin_price")
-
-        
-
+        /*bitcoin_price.show(5)
+        bitcoin_price.createOrReplaceTempView("bitcoin_price")*/
+        //dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin", "cycling")
+        val bpDF = dbconnect.readFromCassandra("bitcoin", "cycling")
+        bpDF.show(5)
         /*val time_body_price = spark.sql("""
         SELECT BP.date, BP.hour, RC.body, BP.price 
-        FROM reddit_comment as RC
-        JOIN bitcoin_price as BP ON RC.date=BP.date
+        FROM reddit_comment AS RC
+        JOIN bitcoin_price AS BP ON RC.date=BP.date
         """)
 
         time_body_price.explain()
@@ -74,7 +79,7 @@ object BitFluc
     {
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
-        subredditPreprocess(preprocessor)
+        //subredditPreprocess(preprocessor)
         bodyPreprocess(preprocessor)
     }
 
@@ -85,6 +90,7 @@ object BitFluc
         datePreprocess(preprocessor)
     }
 
+    // load data for different format
     def load(preprocessor: Preprocessor, path: String, format: String): Unit =
     {
         if(format == "json"){
@@ -105,10 +111,17 @@ object BitFluc
           .appName("Bit Fluc")
           //.master("spark://10.0.0.11:7077")
           .config("spark.default.parallelism", 20)  
+          .config("spark.cassandra.connection.host", "10.0.0.5")
+          .config("spark.cassandra.auth.username", "cassandra")            
+          .config("spark.cassandra.auth.password", "cassandra") 
+	  .config("spark.cassandra.connection.port","9042")
+          .config("spark.cassandra.output.consistency.level","ONE")
           .getOrCreate()
 
         spark.sparkContext.setLogLevel("ERROR")
-	return spark 
+
+
+        return spark 
     }
 
     // get bitcoin price schema
