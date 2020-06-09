@@ -44,7 +44,7 @@ class Preprocessor(val dataloader : DataLoader)
         dataloader.updateData(dataloader.getData()
                               .filter(col("subreddit").isin(list:_*)))*/
        dataloader.getData().createOrReplaceTempView("reddit_comment")
-       dataloader.updateData(dataloader.spark.sql("""
+       dataloader.updateData(spark.sql("""
                               SELECT * FROM reddit_comment
                               WHERE LOWER(subreddit) LIKE "%bitcoin%"
                                  OR LOWER(subreddit) LIKE "%cryptocurrency%"
@@ -58,7 +58,7 @@ class Preprocessor(val dataloader : DataLoader)
         dataloader.getData().createOrReplaceTempView("reddit_comment")
         //dataloader.updateData(dataloader.getData()
         //                      .filter(col("body").like("%bitcoin%")))
-        dataloader.updateData(dataloader.spark.sql("""
+        dataloader.updateData(spark.sql("""
                               SELECT * FROM reddit_comment
                               WHERE LOWER(body) LIKE "%bitcoin%"
                                  OR LOWER(body) LIKE "%cryptocurrency%"
@@ -73,4 +73,66 @@ class Preprocessor(val dataloader : DataLoader)
         dataloader.updateData(dataloader.getData()
                               .filter(length(col("body")) > 0))
     }
+
+    // remove comment post from deleted account
+    def removeDeletedAccount(): Unit = 
+    {
+        dataloader.updateData(dataloader.getData()
+                              .filter(col("author") =!= "[deleted]"))
+    }
+
+    // remove comment with negative score
+    def removeNegativeComment(): Unit = 
+    {
+        dataloader.updateData(dataloader.getData()
+                              .filter(col("score") > 0))
+    }
+
+    // average price for every hour
+    def priceAvgHour(): Unit = 
+    {   
+	dataloader.getData().createOrReplaceTempView("bitcoin_price")
+	dataloader.updateData(spark.sql("""
+                              SELECT date, hour, AVG(price) AS price
+                              FROM bitcoin_price
+                              GROUP BY date, hour
+                              """))
+    }
+
+    // reddit comment score sum by every hour
+    def scoreSumHour(): Unit = 
+    {
+	dataloader.getData().createOrReplaceTempView("reddit_comment")
+        dataloader.updateData(spark.sql("""
+                              SELECT date, hour, SUM(score) AS score
+                              FROM reddit_comment
+                              GROUP BY date, hour
+                              """))
+    }
+
+    // bitcoin price in a time interval averaged by period
+    def priceInInterval(interval: String, period: String): Unit = 
+    {
+	loader.getData().createOrReplaceTempView("bitcoin_price")
+        dataloader.updateData(spark.sql("""
+                              SELECT {1} as period, hour, AVG(price) AS price
+                              FROM bitcoin_price
+			      WHERE date >= CURDATE() - INTERVAL {2}
+                              GROUP BY date, hour
+                              """)).format(period, interval)
+    }
+
+    // reddit comment score in a time interval aggregated by period
+    def scoreInInterval(interval: String, period: String): Unit = 
+    {
+	// e.g. interval = "5 YEAR", period = "YEAR(date), WEEK(date)"
+        loader.getData().createOrReplaceTempView("reddit_comment")
+        dataloader.updateData(spark.sql("""
+                              SELECT {1} as period, SUM(score) AS score
+                              FROM reddit_comment
+			      WHERE date >= CURDATE() - INTERVAL {2}
+                              GROUP BY period
+                              """)).format(period, interval)
+    }
+
 }
