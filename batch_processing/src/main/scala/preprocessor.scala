@@ -4,7 +4,7 @@ import dataload.DataLoader
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
-class Preprocessor(val dataloader : DataLoader)
+class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
 {
 
     // load csv file and upload it back to s3 after transform to Parquet
@@ -111,28 +111,28 @@ class Preprocessor(val dataloader : DataLoader)
     }
 
     // bitcoin price in a time interval averaged by period
-    def priceInInterval(interval: String, period: String): Unit = 
+    def priceInInterval(period: String, interval: Int): Unit = 
     {
-	loader.getData().createOrReplaceTempView("bitcoin_price")
-        dataloader.updateData(spark.sql("""
-                              SELECT {1} as period, hour, AVG(price) AS price
+	dataloader.getData().createOrReplaceTempView("bitcoin_price")
+        dataloader.updateData(spark.sql(s"""
+                              SELECT date, AVG(price) AS price
                               FROM bitcoin_price
-			      WHERE date >= CURDATE() - INTERVAL {2}
-                              GROUP BY date, hour
-                              """)).format(period, interval)
+                              WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
+                              GROUP BY ${period}
+                              """))
     }
 
     // reddit comment score in a time interval aggregated by period
-    def scoreInInterval(interval: String, period: String): Unit = 
+    def scoreInInterval(period: String, interval: Int): Unit = 
     {
 	// e.g. interval = "5 YEAR", period = "YEAR(date), WEEK(date)"
-        loader.getData().createOrReplaceTempView("reddit_comment")
-        dataloader.updateData(spark.sql("""
-                              SELECT {1} as period, SUM(score) AS score
+        dataloader.getData().createOrReplaceTempView("reddit_comment")
+        dataloader.updateData(spark.sql(s"""
+                              SELECT date, SUM(score) AS score
                               FROM reddit_comment
-			      WHERE date >= CURDATE() - INTERVAL {2}
-                              GROUP BY period
-                              """)).format(period, interval)
+                              WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
+                              GROUP BY ${period}
+                              """))
     }
 
 }

@@ -20,40 +20,47 @@ object BitFluc
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
-        val rcJsonPath = "s3a://gary-reddit-json/comments/*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comment/"
-
-        rcPreprocessor.transformJsonToParquet(rcJsonPath, rcParquetPath)
+        val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015-01.json"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comment/part-0111*"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
         val bpPreprocessor = new Preprocessor(spark, bpLoader)
         val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
 
-	//rcloadPreprocess(rcPreprocessor, rcJsonPath, "json")
-	//bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
+        val period = "date"
+        val interval = 100
 
-        /*val reddit_comment = rcLoader.getData()
+	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
+	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval)
+
+        val reddit_comment = rcLoader.getData()
         reddit_comment.show(5)
-        reddit_comment.createOrReplaceTempView("reddit_comment")
+        reddit_comment.createOrReplaceTempView("reddit_comment_score")
 
         val bitcoin_price = bpLoader.getData()
         bitcoin_price.show(5)
-        bitcoin_price.createOrReplaceTempView("bitcoin_price")*/
+        bitcoin_price.createOrReplaceTempView("bitcoin_avg_price")
   
-        /*dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin", "cycling")
-        val bpDF = dbconnect.readFromCassandra("bitcoin", "cycling")
+        /*dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin_reddit", "cycling")
+        val bpDF = dbconnect.readFromCassandra("bitcoin_reddit", "cycling")
         print(bpDF.count())*/
         
-        /*val time_body_price = spark.sql("""
-                              SELECT BAP.date, BAP.hour, RCS.total_score, BAP.avg_price 
-                              FROM reddit_comment_score AS RCS
-                              JOIN bitcoin_avg_price AS BAP ON RCS.date=BAP.date and RCS.hour = BAP.hour
-                              """)
+        /*val time_body_price = joinBitcoinReddit(spark)
 
         time_body_price.explain()
         time_body_price.show(20)*/
 
+    }
+
+    // join bitcoin and reddit dataset
+    def joinBitcoinReddit(spark: SparkSession): DataFrame =
+    {
+       spark.sql("""
+       SELECT BAP.date, BAP.hour, RCS.score, BAP.price
+       FROM reddit_comment_score AS RCS
+       JOIN bitcoin_avg_price AS BAP ON RCS.date=BAP.date and RCS.hour = BAP.hour
+       """)
     }
 
     // preprocess unix time and create new column
@@ -71,7 +78,7 @@ object BitFluc
     }
 
     // load reddit comment data and preprocess
-    def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String): Unit = 
+    def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int): Unit = 
     {
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
@@ -79,15 +86,15 @@ object BitFluc
         preprocessor.filterSubreddit()
         preprocessor.removeNegativeComment()
         preprocessor.removeDeletedAccount()
-        preprocessor.scoreInInterval("date", "1 YEAR")
+        preprocessor.scoreInInterval(period, interval)
     }
 
     // load bitcoin price data and preprocess
-    def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String): Unit =
+    def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int): Unit =
     {
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
-        preprocessor.priceInInterval("date", "1 YEAR")
+        preprocessor.priceInInterval(period, interval)
     }
 
     // load data for different format
@@ -119,7 +126,6 @@ object BitFluc
           .getOrCreate()
 
         spark.sparkContext.setLogLevel("ERROR")
-
 
         spark 
     }
