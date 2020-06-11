@@ -1,5 +1,7 @@
 package bitfluc
 
+import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
+import com.johnsnowlabs.nlp.SparkNLP
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.{col, udf}
@@ -16,12 +18,13 @@ object BitFluc
     {   
         val spark = getSparkSession()
         val dbconnect = new DBConnector(spark)
+        val sentiment = loadNLPModel()
         
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
         val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015-01.json"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comment/part-0111*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comment/*"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
@@ -30,30 +33,50 @@ object BitFluc
 
         val period = "date, hour"
         val interval = 5
+        val windowSize = 10
 
-	//rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
-	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval)
+	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
+	//bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval, windowSize)
 
-        /*val reddit_comment = rcLoader.getData()
-        reddit_comment.show(5)
-        reddit_comment.createOrReplaceTempView("reddit_comment")*/
+        val reddit_comment = rcLoader.getData()
+        reddit_comment.persist()
+        //reddit_comment.show(5)
+        /*reddit_comment.createOrReplaceTempView("reddit_comment")*/
 
-        val bitcoin_price = bpLoader.getData()
+        //val bitcoin_price = bpLoader.getData()
         //bitcoin_price.show()
         //bitcoin_price.createOrReplaceTempView("bitcoin_price")
   
-        dbconnect.writeToCassandra(bitcoin_price, "bitcoin_price_float_five_days", "cycling")
+        dbconnect.writeToCassandra(reddit_comment, "reddit_comment_five_days", "cycling")
 
         println("Finish Writing!!!!!!!!!!!!!!!!!!!!")
 
-        val bpDF = dbconnect.readFromCassandra("bitcoin_price_float_five_days", "cycling")
-        bpDF.show()
+        /*val bpDF = dbconnect.readFromCassandra("reddit_comment_five_days", "cycling")
+        bpDF.show()*/
         
         /*val time_body_price = joinBitcoinReddit(spark)
 
         time_body_price.explain()
         time_body_price.show(20)*/
 
+    }
+
+    // left join reddit_comment spike on bitcoin_price spike if reddit_commment date is same or before bitcoin_price date
+    def flintLeftJoin(bitcoin_price: DataFrame, reddit_comment: DataFrame, tolerance: String): DataFrame 
+    {
+        // e.g. tolerance='1day'
+        val asOfJoinDF = bitcoin_price.leftJoin(reddit_comment, tolerance=tolerance)
+
+        asOfJoinDF
+    }
+
+    // load pretrained nlp model. 
+    def loadNLPModel(): PretrainedPipeline =
+    {
+        val sentiment = PretrainedPipeline
+        .fromDisk("../scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/spark_nlp/sentiment_analysis")
+
+        sentiment
     }
 
     // join bitcoin and reddit dataset
@@ -93,11 +116,13 @@ object BitFluc
     }
 
     // load bitcoin price data and preprocess
-    def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int): Unit =
+    def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int, size: Int): Unit =
     {
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
         preprocessor.priceInInterval(period,interval)
+        preprocessor.addWindowMax(size)
+        preprocessor.addWindowMin(size)
     }
 
     // load data for different format
@@ -120,12 +145,12 @@ object BitFluc
 	val spark = SparkSession.builder
           .appName("Bit Fluc")
           .master("spark://10.0.0.11:7077")
-          .config("spark.default.parallelism", 20)  
+          .config("spark.default.parallelism", 50)  
           .config("spark.cassandra.connection.host", "10.0.0.5")
           .config("spark.cassandra.auth.username", "cassandra")            
           .config("spark.cassandra.auth.password", "cassandra") 
 	  .config("spark.cassandra.connection.port","9042")
-          .config("spark.cassandra.output.consistency.level","TWO")
+          .config("spark.cassandra.output.consistency.level","ONE")
           .getOrCreate()
 
         spark.sparkContext.setLogLevel("ERROR")
