@@ -49,6 +49,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                               WHERE LOWER(subreddit) LIKE "%bitcoin%"
                                  OR LOWER(subreddit) LIKE "%cryptocurrency%"
 				 OR LOWER(subreddit) LIKE "%blockchain%"
+                                 OR LOWER(subreddit) LIKE "%tether%"
                               """))
     }
 
@@ -88,37 +89,17 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                               .filter(col("score") > 0))
     }
 
-    // average price for every hour
-    def priceAvgHour(): Unit = 
-    {   
-	dataloader.getData().createOrReplaceTempView("bitcoin_price")
-	dataloader.updateData(spark.sql("""
-                              SELECT date, hour, AVG(price) AS price
-                              FROM bitcoin_price
-                              GROUP BY date, hour
-                              """))
-    }
-
-    // reddit comment score sum by every hour
-    def scoreSumHour(): Unit = 
-    {
-	dataloader.getData().createOrReplaceTempView("reddit_comment")
-        dataloader.updateData(spark.sql("""
-                              SELECT date, hour, SUM(score) AS score
-                              FROM reddit_comment
-                              GROUP BY date, hour
-                              """))
-    }
-
     // bitcoin price in a time interval averaged by period
     def priceInInterval(period: String, interval: Int): Unit = 
     {
 	dataloader.getData().createOrReplaceTempView("bitcoin_price")
         dataloader.updateData(spark.sql(s"""
-                              SELECT date, AVG(price) AS price
+                              SELECT ${period}, ROUND(AVG(price),2) AS price
                               FROM bitcoin_price
                               WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
+                              AND date < DATE_ADD(CAST('2019-07-01' AS DATE), 0)
                               GROUP BY ${period}
+                              ORDER BY ${period} ASC 
                               """))
     }
 
@@ -128,10 +109,12 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
 	// e.g. interval = "5 YEAR", period = "YEAR(date), WEEK(date)"
         dataloader.getData().createOrReplaceTempView("reddit_comment")
         dataloader.updateData(spark.sql(s"""
-                              SELECT date, SUM(score) AS score
+                              SELECT ${period}, SUM(score) AS score
                               FROM reddit_comment
-                              WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
+                              WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval}) 
+                              AND date < DATE_ADD(CAST('2019-07-01' AS DATE), 0)
                               GROUP BY ${period}
+                              ORDER BY ${period} ASC
                               """))
     }
 

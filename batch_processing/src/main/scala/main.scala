@@ -28,23 +28,26 @@ object BitFluc
         val bpPreprocessor = new Preprocessor(spark, bpLoader)
         val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
 
-        val period = "date"
-        val interval = 100
+        val period = "date, hour"
+        val interval = 5
 
-	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
+	//rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval)
 
-        val reddit_comment = rcLoader.getData()
+        /*val reddit_comment = rcLoader.getData()
         reddit_comment.show(5)
-        reddit_comment.createOrReplaceTempView("reddit_comment_score")
+        reddit_comment.createOrReplaceTempView("reddit_comment")*/
 
         val bitcoin_price = bpLoader.getData()
-        bitcoin_price.show(5)
-        bitcoin_price.createOrReplaceTempView("bitcoin_avg_price")
+        //bitcoin_price.show()
+        //bitcoin_price.createOrReplaceTempView("bitcoin_price")
   
-        /*dbconnect.writeToCassandra(bitcoin_price.select("date","price","volume"), "bitcoin_reddit", "cycling")
-        val bpDF = dbconnect.readFromCassandra("bitcoin_reddit", "cycling")
-        print(bpDF.count())*/
+        dbconnect.writeToCassandra(bitcoin_price, "bitcoin_price_float_five_days", "cycling")
+
+        println("Finish Writing!!!!!!!!!!!!!!!!!!!!")
+
+        val bpDF = dbconnect.readFromCassandra("bitcoin_price_float_five_days", "cycling")
+        bpDF.show()
         
         /*val time_body_price = joinBitcoinReddit(spark)
 
@@ -57,9 +60,9 @@ object BitFluc
     def joinBitcoinReddit(spark: SparkSession): DataFrame =
     {
        spark.sql("""
-       SELECT BAP.date, BAP.hour, RCS.score, BAP.price
-       FROM reddit_comment_score AS RCS
-       JOIN bitcoin_avg_price AS BAP ON RCS.date=BAP.date and RCS.hour = BAP.hour
+       SELECT BP.date, BP.hour, RC.score, BP.price
+       FROM reddit_comment AS RC
+       JOIN bitcoin_price AS BP ON RC.date=BP.date and RC.hour = BP.hour
        """)
     }
 
@@ -86,7 +89,7 @@ object BitFluc
         preprocessor.filterSubreddit()
         preprocessor.removeNegativeComment()
         preprocessor.removeDeletedAccount()
-        preprocessor.scoreInInterval(period, interval)
+        preprocessor.scoreInInterval(period,interval)
     }
 
     // load bitcoin price data and preprocess
@@ -94,7 +97,7 @@ object BitFluc
     {
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
-        preprocessor.priceInInterval(period, interval)
+        preprocessor.priceInInterval(period,interval)
     }
 
     // load data for different format
@@ -122,7 +125,7 @@ object BitFluc
           .config("spark.cassandra.auth.username", "cassandra")            
           .config("spark.cassandra.auth.password", "cassandra") 
 	  .config("spark.cassandra.connection.port","9042")
-          .config("spark.cassandra.output.consistency.level","ONE")
+          .config("spark.cassandra.output.consistency.level","TWO")
           .getOrCreate()
 
         spark.sparkContext.setLogLevel("ERROR")
