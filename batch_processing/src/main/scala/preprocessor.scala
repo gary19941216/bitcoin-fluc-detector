@@ -1,6 +1,8 @@
 package preprocess
 
 import dataload.DataLoader
+import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
@@ -91,13 +93,19 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
         dataloader.updateData(df.filter(col("score") > 0))
     }
 
+    def removeInvalidData(): Unit = 
+    {
+        val df = dataloader.getData()
+        dataloader.updateData(df.filter(col("price") < 20000))
+    }
+
     // bitcoin price in a time interval averaged by period
     def priceInInterval(period: String, interval: Int): Unit = 
     {
         val df = dataloader.getData()
 	df.createOrReplaceTempView("bitcoin_price")
         dataloader.updateData(spark.sql(s"""
-                              SELECT ${period}, ROUND(AVG(price),2) AS price
+                              SELECT ${period}, ROUND(AVG(price),2) AS price, MIN(price) AS min, MAX(price) AS max
                               FROM bitcoin_price
                               WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
                               AND date < DATE_ADD(CAST('2019-07-01' AS DATE), 0)
@@ -137,5 +145,24 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
         val df = dataloader.getData()
         dataloader.updateData(df.withColumn("window_min", min(df("price")).over(window)))
     }
+
+    // add spike column
+    /*def addSpike(period: Int): Unit = 
+    {   
+        val spike = (price: Int, max: Int, min: Int) => {
+	    var (maxDiff,minDiff) = (max-price, price-min)
+            var (maxDiffRatio, minDiffRatio) = (maxDiff/price, minDiff/price)
+            if(maxDiffRatio > 0.05){
+                "up"
+            } else if(minDiffRatio > 0.05){
+                "down"
+            } else {
+                "no"
+            }            
+        }
+
+        val df = dataloader.getData()
+        dataloader.updateData(df.withColumn("spike", spike("price","window_max","window_min")))
+    }*/
 
 }

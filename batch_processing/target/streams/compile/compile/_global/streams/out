@@ -1,7 +1,4 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:65:18: type mismatch;[0m
-[0m[[0m[31merror[0m] [0m[0m found   : com.johnsnowlabs.nlp.pretrained.PretrainedPipeline[0m
-[0m[[0m[31merror[0m] [0m[0m required: org.apache.spark.sql.DataFrame[0m
-[0m[[0m[31merror[0m] [0m[0m    (which expands to)  org.apache.spark.sql.Dataset[org.apache.spark.sql.Row][0m
-[0m[[0m[31merror[0m] [0m[0m        .fromDisk("../scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/spark_nlp/sentiment_analysis")[0m
-[0m[[0m[31merror[0m] [0m[0m                 ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:60:47: ')' expected but character literal found.[0m
+[0m[[0m[31merror[0m] [0m[0m                           WHERE price > 20000''')[0m
+[0m[[0m[31merror[0m] [0m[0m                                              ^[0m
 [0m[[0m[31merror[0m] [0m[0mone error found[0m

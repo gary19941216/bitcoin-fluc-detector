@@ -1,7 +1,7 @@
 package bitfluc
 
-import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
-import com.johnsnowlabs.nlp.SparkNLP
+//import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
+//import com.johnsnowlabs.nlp.SparkNLP
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.{col, udf}
@@ -17,8 +17,9 @@ object BitFluc
     def main(args: Array[String])
     {   
         val spark = getSparkSession()
+        //val flintContext = FlintContext(spark)
         val dbconnect = new DBConnector(spark)
-        val sentiment = loadNLPModel()
+        //val sentiment = loadNLPModel()
         
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
@@ -31,53 +32,56 @@ object BitFluc
         val bpPreprocessor = new Preprocessor(spark, bpLoader)
         val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
 
-        val period = "date, hour"
-        val interval = 5
+        val period = "date"
+        val interval = 1095
         val windowSize = 10
 
-	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
-	//bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval, windowSize)
+	//rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
+	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval, windowSize)
 
-        val reddit_comment = rcLoader.getData()
-        reddit_comment.persist()
+        //val reddit_comment = rcLoader.getData()
+        //reddit_comment.persist()
         //reddit_comment.show(5)
         /*reddit_comment.createOrReplaceTempView("reddit_comment")*/
 
-        //val bitcoin_price = bpLoader.getData()
+        val bitcoin_price = bpLoader.getData()
+        //bitcoin_price.persist()
         //bitcoin_price.show()
         //bitcoin_price.createOrReplaceTempView("bitcoin_price")
   
-        dbconnect.writeToCassandra(reddit_comment, "reddit_comment_five_days", "cycling")
+        /*dbconnect.writeToCassandra(bitcoin_price.select("date","price"), "bitcoin_price_float_three_years_test", "cycling")
 
-        println("Finish Writing!!!!!!!!!!!!!!!!!!!!")
+        println("Finish Writing!!!!!!!!!!!!!!!!!!!!")*/
 
-        /*val bpDF = dbconnect.readFromCassandra("reddit_comment_five_days", "cycling")
-        bpDF.show()*/
+        val bpDF = dbconnect.readFromCassandra("bitcoin_price_float_three_years_test", "cycling")
+                            
+        print(bpDF.count())
         
         /*val time_body_price = joinBitcoinReddit(spark)
 
         time_body_price.explain()
         time_body_price.show(20)*/
 
-    }
+    } 
 
     // left join reddit_comment spike on bitcoin_price spike if reddit_commment date is same or before bitcoin_price date
-    def flintLeftJoin(bitcoin_price: DataFrame, reddit_comment: DataFrame, tolerance: String): DataFrame 
+    /*def flintLeftJoin(bitcoin_price: DataFrame, reddit_comment: DataFrame, tolerance: String): DataFrame =
     {
         // e.g. tolerance='1day'
+        //flint_df = flintContext.read.dataframe(df)
         val asOfJoinDF = bitcoin_price.leftJoin(reddit_comment, tolerance=tolerance)
 
         asOfJoinDF
-    }
+    }*/
 
     // load pretrained nlp model. 
-    def loadNLPModel(): PretrainedPipeline =
+    /*def loadNLPModel(): PretrainedPipeline =
     {
         val sentiment = PretrainedPipeline
         .fromDisk("../scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/spark_nlp/sentiment_analysis")
 
         sentiment
-    }
+    }*/
 
     // join bitcoin and reddit dataset
     def joinBitcoinReddit(spark: SparkSession): DataFrame =
@@ -103,6 +107,14 @@ object BitFluc
         preprocessor.removeEmpty()
     }
 
+    // adding column retrieved from window function
+    def windowPreprocess(preprocessor: Preprocessor, size: Int, period: Int): Unit =
+    {
+        preprocessor.addWindowMax(size)
+        preprocessor.addWindowMin(size)
+        //preprocessor.addSpike(period) 
+    }
+
     // load reddit comment data and preprocess
     def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int): Unit = 
     {
@@ -119,10 +131,10 @@ object BitFluc
     def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int, size: Int): Unit =
     {
         load(preprocessor, path, format)
+        preprocessor.removeInvalidData()
         datePreprocess(preprocessor)
-        preprocessor.priceInInterval(period,interval)
-        preprocessor.addWindowMax(size)
-        preprocessor.addWindowMin(size)
+        preprocessor.priceInInterval(period, interval)
+        //windowPreprocess(preprocessor, size, period)	
     }
 
     // load data for different format
