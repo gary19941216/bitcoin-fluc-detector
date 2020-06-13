@@ -32,20 +32,26 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     def seperatePDT() : Unit = 
     {
         val df = dataloader.getData()
-        dataloader.updateData(df.withColumn("year", year(col("time")))
-                                .withColumn("month", month(col("time")))
-                                .withColumn("day", dayofmonth(col("time")))
-                                .withColumn("date", to_date(col("time")))
-                                .withColumn("hour", hour(col("time")))) 
+        dataloader.updateData(df//.withColumn("year", year(col("time")))
+                                //.withColumn("month", month(col("time")))
+                                //.withColumn("day", dayofmonth(col("time")))
+                                .withColumn("date", to_date(col("time"))))
+                                //.withColumn("hour", hour(col("time")))) 
+    }
+
+    def selectColumn() : Unit = 
+    {
+        val df = dataloader.getData()
+        dataloader.updateData(df.select("date", "author", "subreddit", "body", "score"))
     }
 
     // filter by specific subreddit
     def filterSubreddit() : Unit = 
     {
-        /*val list = List("CryptoCurrency", "CyptoCurrencyTrading", "CyptoCurrencies") 
+        val list = List("CryptoCurrency","CryptoCurrencyTrading","CryptoCurrencies","Bitcoin") 
         dataloader.updateData(dataloader.getData()
-                              .filter(col("subreddit").isin(list:_*)))*/
-       val df = dataloader.getData()
+                              .filter(col("subreddit").isin(list:_*)))
+       /*val df = dataloader.getData()
        df.createOrReplaceTempView("reddit_comment")
        dataloader.updateData(spark.sql("""
                               SELECT * FROM reddit_comment
@@ -53,7 +59,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                                  OR LOWER(subreddit) LIKE "%cryptocurrency%"
 				 OR LOWER(subreddit) LIKE "%blockchain%"
                                  OR LOWER(subreddit) LIKE "%tether%"
-                              """))
+                              """))*/
     }
 
     // filter by specified keyword
@@ -61,15 +67,16 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     {
         val df = dataloader.getData()
         df.createOrReplaceTempView("reddit_comment")
-        //dataloader.updateData(dataloader.getData()
-        //                      .filter(col("body").like("%bitcoin%")))
-        dataloader.updateData(spark.sql("""
+        dataloader.updateData(dataloader.getData()
+                              .filter(col("body").rlike("bitcoin")))
+        /*dataloader.updateData(spark.sql("""
                               SELECT * FROM reddit_comment
                               WHERE LOWER(body) LIKE "%bitcoin%"
-                                 OR LOWER(body) LIKE "%cryptocurrency%"
+                              """))*/
+                                 /*OR LOWER(body) LIKE "%cryptocurrency%"
 				 OR LOWER(body) LIKE "%distributed%ledger%"
 				 OR LOWER(body) LIKE "%blockchain%"
-                              """))
+                              """))*/
     }
 
     // remove empty body

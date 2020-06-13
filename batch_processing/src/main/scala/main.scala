@@ -1,7 +1,7 @@
 package bitfluc
 
-//import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
-//import com.johnsnowlabs.nlp.SparkNLP
+import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
+import com.johnsnowlabs.nlp.SparkNLP
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.{col, udf}
@@ -19,13 +19,13 @@ object BitFluc
         val spark = getSparkSession()
         //val flintContext = FlintContext(spark)
         val dbconnect = new DBConnector(spark)
-        //val sentiment = loadNLPModel()
+        val sentiment = loadNLPModel()
         
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
         val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015-01.json"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comment/*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comment/part-*"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
@@ -36,30 +36,29 @@ object BitFluc
         val interval = 1095
         val windowSize = 10
 
-	//rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
+	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval, windowSize)
 
-        //val reddit_comment = rcLoader.getData()
+        val reddit_comment = rcLoader.getData()
+        reddit_comment.explain()
         //reddit_comment.persist()
-        //reddit_comment.show(5)
-        /*reddit_comment.createOrReplaceTempView("reddit_comment")*/
+        reddit_comment.createOrReplaceTempView("reddit_comment")
 
         val bitcoin_price = bpLoader.getData()
         //bitcoin_price.persist()
-        //bitcoin_price.show()
-        //bitcoin_price.createOrReplaceTempView("bitcoin_price")
+        bitcoin_price.createOrReplaceTempView("bitcoin_price")
   
-        /*dbconnect.writeToCassandra(bitcoin_price.select("date","price"), "bitcoin_price_float_three_years_test", "cycling")
-
-        println("Finish Writing!!!!!!!!!!!!!!!!!!!!")*/
-
-        val bpDF = dbconnect.readFromCassandra("bitcoin_price_float_three_years_test", "cycling")
+        /*val bpDF = dbconnect.readFromCassandra("bitcoin_price_float_three_years_test", "cycling")
                             
-        print(bpDF.count())
+        print(bpDF.count())*/
         
-        /*val time_body_price = joinBitcoinReddit(spark)
+        val time_body_price = joinBitcoinReddit(spark)
 
-        time_body_price.explain()
+        dbconnect.writeToCassandra(time_body_price.select("date","price","score"), "reddit_bitcoin_three_years_test", "cycling")
+
+        println("Finish Writing!!!!!!!!!!!!!!!!!!!!")
+
+        /*time_body_price.explain()
         time_body_price.show(20)*/
 
     } 
@@ -75,21 +74,21 @@ object BitFluc
     }*/
 
     // load pretrained nlp model. 
-    /*def loadNLPModel(): PretrainedPipeline =
+    def loadNLPModel(): PretrainedPipeline =
     {
         val sentiment = PretrainedPipeline
         .fromDisk("../scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/spark_nlp/sentiment_analysis")
 
         sentiment
-    }*/
+    }
 
     // join bitcoin and reddit dataset
     def joinBitcoinReddit(spark: SparkSession): DataFrame =
     {
        spark.sql("""
-       SELECT BP.date, BP.hour, RC.score, BP.price
+       SELECT BP.date, RC.score, BP.price
        FROM reddit_comment AS RC
-       JOIN bitcoin_price AS BP ON RC.date=BP.date and RC.hour = BP.hour
+       JOIN bitcoin_price AS BP ON RC.date=BP.date
        """)
     }
 
@@ -120,10 +119,12 @@ object BitFluc
     {
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
-        bodyPreprocess(preprocessor)
+        preprocessor.selectColumn()
+        //bodyPreprocess(preprocessor)
         preprocessor.filterSubreddit()
         preprocessor.removeNegativeComment()
         preprocessor.removeDeletedAccount()
+        //bodyPreprocess(preprocessor)
         preprocessor.scoreInInterval(period,interval)
     }
 
