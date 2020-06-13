@@ -36,7 +36,7 @@ object BitFluc
         val interval = 1095
         val windowSize = 10
 
-	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval)
+	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval, sentiment)
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval, windowSize)
 
         val reddit_comment = rcLoader.getData()
@@ -77,7 +77,7 @@ object BitFluc
     def loadNLPModel(): PretrainedPipeline =
     {
         val sentiment = PretrainedPipeline
-        .fromDisk("../scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/spark_nlp/sentiment_analysis")
+        .fromDisk("/usr/local/spark_nlp")
 
         sentiment
     }
@@ -106,6 +106,13 @@ object BitFluc
         preprocessor.removeEmpty()
     }
 
+    // add sentiment score
+    def sentimentPreprocess(preprocessor: Preprocessor): Unit =
+    {
+        preprocessor.addSentiment(sentiment)
+        preprocessor.sentimentToNum()
+    }
+
     // adding column retrieved from window function
     def windowPreprocess(preprocessor: Preprocessor, size: Int, period: Int): Unit =
     {
@@ -115,7 +122,7 @@ object BitFluc
     }
 
     // load reddit comment data and preprocess
-    def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int): Unit = 
+    def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int, sentiment: PretrainedPipeline): Unit = 
     {
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
@@ -124,7 +131,7 @@ object BitFluc
         preprocessor.filterSubreddit()
         preprocessor.removeNegativeComment()
         preprocessor.removeDeletedAccount()
-        //bodyPreprocess(preprocessor)
+        sentimentPreprocess(preprocessor)
         preprocessor.scoreInInterval(period,interval)
     }
 

@@ -1,5 +1,7 @@
 package preprocess
 
+import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
+import com.johnsnowlabs.nlp.SparkNLP
 import dataload.DataLoader
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.expressions.Window
@@ -42,7 +44,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     def selectColumn() : Unit = 
     {
         val df = dataloader.getData()
-        dataloader.updateData(df.select("date", "author", "subreddit", "body", "score"))
+        dataloader.updateData(df.select(col("date"), col("author"), col("subreddit"), col("body").alias("text"), col("score")))
     }
 
     // filter by specific subreddit
@@ -135,6 +137,47 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                               GROUP BY ${period}
                               ORDER BY ${period}
                               """))
+    }
+
+    // reddit comment score with sentiment in a time interval aggregated by period
+    def nlpScoreInInterval(period: String, interval: Int): Unit =
+    {
+        // e.g. interval = "5 YEAR", period = "YEAR(date), WEEK(date)"
+        val df = dataloader.getData()
+        df.createOrReplaceTempView("reddit_comment")
+        dataloader.updateData(spark.sql(s"""
+                              SELECT ${period}, SUM(score) AS score
+                              FROM reddit_comment
+                              WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
+                              AND date < DATE_ADD(CAST('2019-07-01' AS DATE), 0)
+                              GROUP BY ${period}
+                              ORDER BY ${period}
+                              """))
+    }
+
+    // add sentiment column
+    def addSentiment(sentiment: PretrainedPipeline): Unit =
+    {
+        val df = dataloader.getData()
+        dataloader.updateData(sentiment.transform(df)
+                              .select(col("date"), col("author"), col("subreddit"), col("text"), col("score"),
+                              explode(col("sentiment.result")).as("sentiment_result")))
+    }
+
+    def sentimentToNum(): Unit = 
+    {
+        val transform = (sentiment_result: String) => {
+            if(sentiment_result == "positive"){
+                1
+            } else if(sentiment_result == "negative"){
+                -1
+            } else {
+                0
+            }
+        }
+
+        val df = dataloader.getData()
+        dataloader.updateData(df.withColumn("sentiment_score", transform("sentiment_result"))
     }
 
     // add window max within the window size, start from the time
