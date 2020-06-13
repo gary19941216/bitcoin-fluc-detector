@@ -50,10 +50,10 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     // filter by specific subreddit
     def filterSubreddit() : Unit = 
     {
-        val list = List("CryptoCurrency","CryptoCurrencyTrading","CryptoCurrencies","Bitcoin") 
+        /*val list = List("CryptoCurrency","CryptoCurrencyTrading","CryptoCurrencies","Bitcoin") 
         dataloader.updateData(dataloader.getData()
-                              .filter(col("subreddit").isin(list:_*)))
-       /*val df = dataloader.getData()
+                              .filter(col("subreddit").isin(list:_*)))*/
+       val df = dataloader.getData()
        df.createOrReplaceTempView("reddit_comment")
        dataloader.updateData(spark.sql("""
                               SELECT * FROM reddit_comment
@@ -61,7 +61,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                                  OR LOWER(subreddit) LIKE "%cryptocurrency%"
 				 OR LOWER(subreddit) LIKE "%blockchain%"
                                  OR LOWER(subreddit) LIKE "%tether%"
-                              """))*/
+                              """))
     }
 
     // filter by specified keyword
@@ -69,16 +69,15 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     {
         val df = dataloader.getData()
         df.createOrReplaceTempView("reddit_comment")
-        dataloader.updateData(dataloader.getData()
-                              .filter(col("body").rlike("bitcoin")))
-        /*dataloader.updateData(spark.sql("""
+        //dataloader.updateData(dataloader.getData()
+        //                      .filter(col("body").rlike("bitcoin")))
+        dataloader.updateData(spark.sql("""
                               SELECT * FROM reddit_comment
                               WHERE LOWER(body) LIKE "%bitcoin%"
-                              """))*/
-                                 /*OR LOWER(body) LIKE "%cryptocurrency%"
+                                 OR LOWER(body) LIKE "%cryptocurrency%"
 				 OR LOWER(body) LIKE "%distributed%ledger%"
 				 OR LOWER(body) LIKE "%blockchain%"
-                              """))*/
+                              """))
     }
 
     // remove empty body
@@ -116,8 +115,8 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
         dataloader.updateData(spark.sql(s"""
                               SELECT ${period}, ROUND(AVG(price),2) AS price, MIN(price) AS min, MAX(price) AS max
                               FROM bitcoin_price
-                              WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
-                              AND date < DATE_ADD(CAST('2019-07-01' AS DATE), 0)
+                              WHERE date >= DATE_ADD(CAST('2019-11-01' AS DATE), ${-interval})
+                              AND date < DATE_ADD(CAST('2019-11-01' AS DATE), 0)
                               GROUP BY ${period}
                               ORDER BY ${period}
                               """))
@@ -132,8 +131,8 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
         dataloader.updateData(spark.sql(s"""
                               SELECT ${period}, SUM(score) AS score
                               FROM reddit_comment
-                              WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval}) 
-                              AND date < DATE_ADD(CAST('2019-07-01' AS DATE), 0)
+                              WHERE date >= DATE_ADD(CAST('2019-11-01' AS DATE), ${-interval}) 
+                              AND date < DATE_ADD(CAST('2019-11-01' AS DATE), 0)
                               GROUP BY ${period}
                               ORDER BY ${period}
                               """))
@@ -146,7 +145,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
         val df = dataloader.getData()
         df.createOrReplaceTempView("reddit_comment")
         dataloader.updateData(spark.sql(s"""
-                              SELECT ${period}, SUM(score) AS score
+                              SELECT ${period}, SUM(score*sentiment_score) AS score
                               FROM reddit_comment
                               WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
                               AND date < DATE_ADD(CAST('2019-07-01' AS DATE), 0)
@@ -166,7 +165,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
 
     def sentimentToNum(): Unit = 
     {
-        val transform = (sentiment_result: String) => {
+        val transformToScore = (sentiment_result: String) => {
             if(sentiment_result == "positive"){
                 1
             } else if(sentiment_result == "negative"){
@@ -176,8 +175,10 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
             }
         }
 
+        val sentimentUDF  = udf(transformToScore)
+
         val df = dataloader.getData()
-        dataloader.updateData(df.withColumn("sentiment_score", transform("sentiment_result"))
+        dataloader.updateData(df.withColumn("sentiment_score", sentimentUDF(col("sentiment_result"))))
     }
 
     // add window max within the window size, start from the time

@@ -1,7 +1,6 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/preprocessor.scala:47:34: overloaded method value select with alternatives:[0m
-[0m[[0m[31merror[0m] [0m[0m  (col: String,cols: String*)org.apache.spark.sql.DataFrame <and>[0m
-[0m[[0m[31merror[0m] [0m[0m  (cols: org.apache.spark.sql.Column*)org.apache.spark.sql.DataFrame[0m
-[0m[[0m[31merror[0m] [0m[0m cannot be applied to (String, String, String, org.apache.spark.sql.Column, String)[0m
-[0m[[0m[31merror[0m] [0m[0m        dataloader.updateData(df.select("date", "author", "subreddit", col("body").alias("text"), "score"))[0m
-[0m[[0m[31merror[0m] [0m[0m                                 ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/preprocessor.scala:181:77: type mismatch;[0m
+[0m[[0m[31merror[0m] [0m[0m found   : String("sentiment_result")[0m
+[0m[[0m[31merror[0m] [0m[0m required: org.apache.spark.sql.Column[0m
+[0m[[0m[31merror[0m] [0m[0m        dataloader.updateData(df.withColumn("sentiment_score", sentimentUDF("sentiment_result")))[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                            ^[0m
 [0m[[0m[31merror[0m] [0m[0mone error found[0m

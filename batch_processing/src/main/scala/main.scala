@@ -107,7 +107,7 @@ object BitFluc
     }
 
     // add sentiment score
-    def sentimentPreprocess(preprocessor: Preprocessor): Unit =
+    def sentimentPreprocess(preprocessor: Preprocessor, sentiment: PretrainedPipeline): Unit =
     {
         preprocessor.addSentiment(sentiment)
         preprocessor.sentimentToNum()
@@ -127,12 +127,13 @@ object BitFluc
         load(preprocessor, path, format)
         datePreprocess(preprocessor)
         preprocessor.selectColumn()
-        //bodyPreprocess(preprocessor)
+        bodyPreprocess(preprocessor)
         preprocessor.filterSubreddit()
         preprocessor.removeNegativeComment()
         preprocessor.removeDeletedAccount()
-        sentimentPreprocess(preprocessor)
-        preprocessor.scoreInInterval(period,interval)
+        sentimentPreprocess(preprocessor, sentiment)
+        //preprocessor.scoreInInterval(period,interval)
+        preprocessor.nlpScoreInInterval(period,interval)
     }
 
     // load bitcoin price data and preprocess
@@ -165,7 +166,7 @@ object BitFluc
 	val spark = SparkSession.builder
           .appName("Bit Fluc")
           .master("spark://10.0.0.11:7077")
-          .config("spark.default.parallelism", 50)  
+          .config("spark.default.parallelism", 200)  
           .config("spark.cassandra.connection.host", "10.0.0.5")
           .config("spark.cassandra.auth.username", "cassandra")            
           .config("spark.cassandra.auth.password", "cassandra") 
