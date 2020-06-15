@@ -51,7 +51,7 @@ object BitFlucStreaming
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
 
         rcLoader.updateData(rcDF)
-        BitFluc.rcPreprocess(rcPreprocessor, period, interval, isPast, sentiment)
+        BitFluc.rcPreprocess(rcPreprocessor, isPast, sentiment)
 
         val reddit_comment = rcLoader.getData()
         val reddit_comment_window = aggScore(reddit_comment)
@@ -63,7 +63,7 @@ object BitFlucStreaming
    	val query = reddit_comment_window_end.writeStream
 	//.option("checkpointLocation", "/tmp/Spark/")
 	.format("org.apache.spark.sql.cassandra")
-	  .option("keyspace", "cycling")
+	  .option("keyspace", "bitcoin_reddit")
 	  .option("table", "reddit_streaming_test3")
 	.outputMode("append")
 	.start()

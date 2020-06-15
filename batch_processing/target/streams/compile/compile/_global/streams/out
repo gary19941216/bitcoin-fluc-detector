@@ -1,7 +1,5 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/streaming.scala:58:83: value alias is not a member of String[0m
-[0m[[0m[31merror[0m] [0m[0m        val reddit_comment_window_end = reddit_comment_window.select("window.end".alias("time"),"score")[0m
-[0m[[0m[31merror[0m] [0m[0m                                                                                  ^[0m
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/streaming.scala:59:51: value alias is not a member of String[0m
-[0m[[0m[31merror[0m] [0m[0m        reddit_comment_window.select("window.end".alias("time"),"score").printSchema()[0m
-[0m[[0m[31merror[0m] [0m[0m                                                  ^[0m
-[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:244:14: not enough arguments for method rcPreprocess: (preprocessor: preprocess.Preprocessor, isPast: Boolean, sentiment: com.johnsnowlabs.nlp.pretrained.PretrainedPipeline)Unit.[0m
+[0m[[0m[31merror[0m] [0m[0mUnspecified value parameter sentiment.[0m
+[0m[[0m[31merror[0m] [0m[0m	rcPreprocess(preprocessor isPast, sentiment)[0m
+[0m[[0m[31merror[0m] [0m[0m	            ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m

@@ -70,6 +70,12 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
     {
         data.take(num)
     }
+
+    //cache data
+    def persist() : Unit =
+    {
+        data.persist()
+    }
     
 }
 

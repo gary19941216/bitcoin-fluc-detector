@@ -40,6 +40,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                                 .withColumn("second", second(col("time")))) 
     }
 
+    // select target column
     def selectColumn() : Unit = 
     {
         val df = dataloader.getData()
@@ -77,9 +78,6 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                               WHERE LOWER(text) LIKE "%bitcoin%"
                                 AND LOWER(text) LIKE "%price%"
 			      """)) 
-                                 /*OR LOWER(text) LIKE "%distributed%ledger%"
-				 OR LOWER(text) LIKE "%blockchain%"
-                              """))*/
     }
 
     // remove empty body
@@ -205,14 +203,14 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     }
 
     // add spike column
-    def addSpike(): Unit = 
+    def addSpike(threshold: Float): Unit = 
     {   
         val spike = (price: Int, max: Int, min: Int) => {
 	    var (maxDiff,minDiff) = (max-price, price-min)
             var (maxDiffRatio, minDiffRatio) = (maxDiff/price, minDiff/price)
-            if(maxDiffRatio > 0.05){
+            if(maxDiffRatio > threshold){
                 "up"
-            } else if(minDiffRatio > 0.05){
+            } else if(minDiffRatio > threshold){
                 "down"
             } else {
                 "no"
