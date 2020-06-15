@@ -34,17 +34,18 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     def seperatePDT() : Unit = 
     {
         val df = dataloader.getData()
-        dataloader.updateData(df//.withColumn("year", year(col("time")))
-                                //.withColumn("month", month(col("time")))
-                                //.withColumn("day", dayofmonth(col("time")))
-                                .withColumn("date", to_date(col("time"))))
-                                //.withColumn("hour", hour(col("time")))) 
+        dataloader.updateData(df.withColumn("date", to_date(col("time")))
+                                .withColumn("hour", hour(col("time")))
+                                .withColumn("minute", minute(col("time")))
+                                .withColumn("second", second(col("time")))) 
     }
 
     def selectColumn() : Unit = 
     {
         val df = dataloader.getData()
-        dataloader.updateData(df.select(col("date"), col("author"), col("subreddit"), col("body").alias("text"), col("score")))
+        dataloader.updateData(df.select(col("created_utc").alias("timestamp"),
+                              col("date"), col("hour"), col("minute"), col("second"),
+                              col("author"), col("subreddit"), col("body").alias("text"), col("score")))
     }
 
     // filter by specific subreddit
@@ -59,7 +60,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                               SELECT * FROM reddit_comment
                               WHERE LOWER(subreddit) LIKE "%bitcoin%"
                                  OR LOWER(subreddit) LIKE "%cryptocurrency%"
-				 OR LOWER(subreddit) LIKE "%blockchain%"
+				 OR LOWER(subreddit) LIKE "%ethereum%"
                                  OR LOWER(subreddit) LIKE "%tether%"
                               """))
     }
@@ -69,22 +70,23 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     {
         val df = dataloader.getData()
         df.createOrReplaceTempView("reddit_comment")
-        //dataloader.updateData(dataloader.getData()
-        //                      .filter(col("body").rlike("bitcoin")))
+        /*dataloader.updateData(dataloader.getData()
+                              .filter(col("body").rlike("bitcoin")))*/
         dataloader.updateData(spark.sql("""
                               SELECT * FROM reddit_comment
-                              WHERE LOWER(body) LIKE "%bitcoin%"
-                                 OR LOWER(body) LIKE "%cryptocurrency%"
-				 OR LOWER(body) LIKE "%distributed%ledger%"
-				 OR LOWER(body) LIKE "%blockchain%"
-                              """))
+                              WHERE LOWER(text) LIKE "%bitcoin%"
+                                AND LOWER(text) LIKE "%price%"
+			      """)) 
+                                 /*OR LOWER(text) LIKE "%distributed%ledger%"
+				 OR LOWER(text) LIKE "%blockchain%"
+                              """))*/
     }
 
     // remove empty body
     def removeEmpty(): Unit = 
     {
         val df = dataloader.getData()
-        dataloader.updateData(df.filter(length(col("body")) > 0))
+        dataloader.updateData(df.filter(length(col("text")) > 0))
     }
 
     // remove comment post from deleted account
@@ -112,8 +114,9 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     {
         val df = dataloader.getData()
 	df.createOrReplaceTempView("bitcoin_price")
+
         dataloader.updateData(spark.sql(s"""
-                              SELECT ${period}, ROUND(AVG(price),2) AS price, MIN(price) AS min, MAX(price) AS max
+                              SELECT ${period}, ROUND(AVG(price),2) AS price
                               FROM bitcoin_price
                               WHERE date >= DATE_ADD(CAST('2019-11-01' AS DATE), ${-interval})
                               AND date < DATE_ADD(CAST('2019-11-01' AS DATE), 0)
@@ -128,6 +131,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
 	// e.g. interval = "5 YEAR", period = "YEAR(date), WEEK(date)"
         val df = dataloader.getData()
         df.createOrReplaceTempView("reddit_comment")
+
         dataloader.updateData(spark.sql(s"""
                               SELECT ${period}, SUM(score) AS score
                               FROM reddit_comment
@@ -144,11 +148,12 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
         // e.g. interval = "5 YEAR", period = "YEAR(date), WEEK(date)"
         val df = dataloader.getData()
         df.createOrReplaceTempView("reddit_comment")
+
         dataloader.updateData(spark.sql(s"""
                               SELECT ${period}, SUM(score*sentiment_score) AS score
                               FROM reddit_comment
-                              WHERE date >= DATE_ADD(CAST('2019-07-01' AS DATE), ${-interval})
-                              AND date < DATE_ADD(CAST('2019-07-01' AS DATE), 0)
+                              WHERE date >= DATE_ADD(CAST('2019-11-01' AS DATE), ${-interval})
+                              AND date < DATE_ADD(CAST('2019-11-01' AS DATE), 0)
                               GROUP BY ${period}
                               ORDER BY ${period}
                               """))
@@ -159,7 +164,9 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     {
         val df = dataloader.getData()
         dataloader.updateData(sentiment.transform(df)
-                              .select(col("date"), col("author"), col("subreddit"), col("text"), col("score"),
+                              .select(col("timestamp"), 
+                              col("date"), col("hour"), col("minute"), col("second"),
+                              col("author"), col("subreddit"), col("text"), col("score"),
                               explode(col("sentiment.result")).as("sentiment_result")))
     }
 
@@ -198,7 +205,7 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
     }
 
     // add spike column
-    /*def addSpike(period: Int): Unit = 
+    def addSpike(): Unit = 
     {   
         val spike = (price: Int, max: Int, min: Int) => {
 	    var (maxDiff,minDiff) = (max-price, price-min)
@@ -212,8 +219,10 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
             }            
         }
 
+        val transform = udf(spike)
+
         val df = dataloader.getData()
-        dataloader.updateData(df.withColumn("spike", spike("price","window_max","window_min")))
-    }*/
+        dataloader.updateData(df.withColumn("spike", transform(col("price"),col("window_max"),col("window_min"))))
+    }
 
 }

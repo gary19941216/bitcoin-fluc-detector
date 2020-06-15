@@ -1,6 +1,7 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/preprocessor.scala:181:77: type mismatch;[0m
-[0m[[0m[31merror[0m] [0m[0m found   : String("sentiment_result")[0m
-[0m[[0m[31merror[0m] [0m[0m required: org.apache.spark.sql.Column[0m
-[0m[[0m[31merror[0m] [0m[0m        dataloader.updateData(df.withColumn("sentiment_score", sentimentUDF("sentiment_result")))[0m
-[0m[[0m[31merror[0m] [0m[0m                                                                            ^[0m
-[0m[[0m[31merror[0m] [0m[0mone error found[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/streaming.scala:58:83: value alias is not a member of String[0m
+[0m[[0m[31merror[0m] [0m[0m        val reddit_comment_window_end = reddit_comment_window.select("window.end".alias("time"),"score")[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                                  ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/streaming.scala:59:51: value alias is not a member of String[0m
+[0m[[0m[31merror[0m] [0m[0m        reddit_comment_window.select("window.end".alias("time"),"score").printSchema()[0m
+[0m[[0m[31merror[0m] [0m[0m                                                  ^[0m
+[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m

@@ -9,6 +9,7 @@ libraryDependencies ++= Seq(
   "com.johnsnowlabs.nlp" %% "spark-nlp" % "2.5.1",
   "com.twosigma" % "flint" % "0.6.0",
   "org.apache.spark" %% "spark-sql-kafka-0-10" % "2.4.3",
+  "org.apache.spark" %% "spark-streaming-kafka-0-10" % "2.4.3",
   "org.apache.kafka" % "kafka-clients" % "2.5.0",
 )
 

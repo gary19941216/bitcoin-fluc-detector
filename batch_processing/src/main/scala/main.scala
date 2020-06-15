@@ -1,5 +1,6 @@
 package bitfluc
 
+import com.twosigma.flint.timeseries._
 import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
 import com.johnsnowlabs.nlp.SparkNLP
 import org.apache.spark.sql._
@@ -11,6 +12,8 @@ import org.apache.spark.sql.functions._
 import dataload.DataLoader
 import preprocess.Preprocessor
 import dbconnector.DBConnector
+//import com.twosigma.flint.timeseries._
+import scala.concurrent.duration._
 
 object BitFluc
 {
@@ -24,7 +27,7 @@ object BitFluc
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
-        val rcJsonPath = "s3a://gary-reddit-json/comments/RC_2015-01.json"
+        val rcJsonPath = "s3a://gary-reddit-json/comments/*"
         val rcParquetPath = "s3a://gary-reddit-parquet/comment/part-*"
 
         val bpSchema = getBPSchema()
@@ -33,38 +36,41 @@ object BitFluc
         val bpCsvPath = "s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/*"
 
         val period = "date"
-        val interval = 1095
-        val windowSize = 10
+        val interval = 1825
+        val windowSize = 5
+        val isPast = true
 
-	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval, sentiment)
-	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval, windowSize)
+
+	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", period, interval, isPast, sentiment)
+	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv", period, interval, isPast, windowSize)
 
         val reddit_comment = rcLoader.getData()
         reddit_comment.explain()
         //reddit_comment.persist()
         reddit_comment.createOrReplaceTempView("reddit_comment")
+  
+        //val reddit_tsRDD = TimeSeriesRDD.fromDF(dataFrame = reddit_comment
+        //                                       .select("score","spike"))(isSorted = true, timeUnit = MILLISECONDS)
 
         val bitcoin_price = bpLoader.getData()
         //bitcoin_price.persist()
         bitcoin_price.createOrReplaceTempView("bitcoin_price")
-  
-        /*val bpDF = dbconnect.readFromCassandra("bitcoin_price_float_three_years_test", "cycling")
-                            
-        print(bpDF.count())*/
-        
+       
+        //val bitcoin_tsRDD = TimeSeriesRDD.fromDF(dataFrame = bitcoin_price
+        //                                        .select("price","spike"))(isSorted = true, timeUnit = MILLISECONDS)
+
+        //val spikeDF = flintLeftJoin(reddit_tsRDD, bitcoin_tsRDD, "1min")
+
         val time_body_price = joinBitcoinReddit(spark)
 
-        dbconnect.writeToCassandra(time_body_price.select("date","price","score"), "reddit_bitcoin_three_years_test", "cycling")
+        dbconnect.writeToCassandra(time_body_price.select("date","price","score"), "reddit_bitcoin_five_year_hour", "cycling")
 
         println("Finish Writing!!!!!!!!!!!!!!!!!!!!")
-
-        /*time_body_price.explain()
-        time_body_price.show(20)*/
 
     } 
 
     // left join reddit_comment spike on bitcoin_price spike if reddit_commment date is same or before bitcoin_price date
-    /*def flintLeftJoin(bitcoin_price: DataFrame, reddit_comment: DataFrame, tolerance: String): DataFrame =
+    /*def flintLeftJoin(bitcoin_price: TimeSeriesRDD, reddit_comment: TimeSeriesRDD, tolerance: String): TimeSeriesRDD =
     {
         // e.g. tolerance='1day'
         //flint_df = flintContext.read.dataframe(df)
@@ -86,9 +92,9 @@ object BitFluc
     def joinBitcoinReddit(spark: SparkSession): DataFrame =
     {
        spark.sql("""
-       SELECT BP.date, RC.score, BP.price
+       SELECT BP.date, BP.hour, RC.score, BP.price
        FROM reddit_comment AS RC
-       JOIN bitcoin_price AS BP ON RC.date=BP.date
+       JOIN bitcoin_price AS BP ON RC.date=BP.date AND RC.hour=BP.hour
        """)
     }
 
@@ -114,36 +120,52 @@ object BitFluc
     }
 
     // adding column retrieved from window function
-    def windowPreprocess(preprocessor: Preprocessor, size: Int, period: Int): Unit =
+    def windowPreprocess(preprocessor: Preprocessor, size: Int): Unit =
     {
         preprocessor.addWindowMax(size)
         preprocessor.addWindowMin(size)
-        //preprocessor.addSpike(period) 
+        preprocessor.addSpike() 
     }
 
     // load reddit comment data and preprocess
-    def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int, sentiment: PretrainedPipeline): Unit = 
+    def rcloadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int, isPast: Boolean, sentiment: PretrainedPipeline): Unit = 
     {
         load(preprocessor, path, format)
-        datePreprocess(preprocessor)
+	rcPreprocess(preprocessor, period, interval, isPast, sentiment)
+    }
+
+    // preprocess reddit comment data
+    def rcPreprocess(preprocessor: Preprocessor, period: String, interval: Int, isPast: Boolean, sentiment: PretrainedPipeline): Unit =
+    {
+       	datePreprocess(preprocessor)
         preprocessor.selectColumn()
         bodyPreprocess(preprocessor)
         preprocessor.filterSubreddit()
         preprocessor.removeNegativeComment()
         preprocessor.removeDeletedAccount()
         sentimentPreprocess(preprocessor, sentiment)
-        //preprocessor.scoreInInterval(period,interval)
-        preprocessor.nlpScoreInInterval(period,interval)
+        if(isPast){
+            preprocessor.scoreInInterval(period ,interval)
+            //preprocessor.nlpScoreInInterval(period ,interval) 
+        }
     }
 
     // load bitcoin price data and preprocess
-    def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int, size: Int): Unit =
+    def bploadPreprocess(preprocessor: Preprocessor, path: String, format: String, period: String, interval: Int, isPast: Boolean, size: Int): Unit =
     {
         load(preprocessor, path, format)
-        preprocessor.removeInvalidData()
+	bpPreprocess(preprocessor, period, interval, isPast, size)
+    }
+
+    // preprocess bitcoin price data
+    def bpPreprocess(preprocessor: Preprocessor, period: String, interval: Int, isPast: Boolean, size: Int): Unit =
+    {
+	preprocessor.removeInvalidData()
         datePreprocess(preprocessor)
-        preprocessor.priceInInterval(period, interval)
-        //windowPreprocess(preprocessor, size, period)	
+        if(isPast){
+            preprocessor.priceInInterval(period, interval)
+        }
+        windowPreprocess(preprocessor, size)
     }
 
     // load data for different format
@@ -166,7 +188,7 @@ object BitFluc
 	val spark = SparkSession.builder
           .appName("Bit Fluc")
           .master("spark://10.0.0.11:7077")
-          .config("spark.default.parallelism", 200)  
+          .config("spark.default.parallelism", 400)  
           .config("spark.cassandra.connection.host", "10.0.0.5")
           .config("spark.cassandra.auth.username", "cassandra")            
           .config("spark.cassandra.auth.password", "cassandra") 

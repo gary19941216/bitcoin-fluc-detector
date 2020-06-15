@@ -2,10 +2,14 @@
 [0m[[0m[0mdebug[0m] [0m[0mInput file mappings:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	preprocess[0m
 [0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/preprocess[0m
+[0m[[0m[0mdebug[0m] [0m[0m	preprocess/Preprocessor$$typecreator2$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/preprocess/Preprocessor$$typecreator2$1.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	preprocess/Preprocessor.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/preprocess/Preprocessor.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	preprocess/Preprocessor$$anonfun$1.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/preprocess/Preprocessor$$anonfun$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	preprocess/Preprocessor$$anonfun$2.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/preprocess/Preprocessor$$anonfun$2.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	preprocess/Preprocessor$$typecreator1$1.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	  /usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/target/scala-2.11/classes/preprocess/Preprocessor$$typecreator1$1.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	bitflucstreaming[0m
