@@ -107,56 +107,6 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
         dataloader.updateData(df.filter(col("price") < 20000))
     }
 
-    // bitcoin price in a time interval averaged by period
-    def priceInInterval(period: String, interval: Int): Unit = 
-    {
-        val df = dataloader.getData()
-	df.createOrReplaceTempView("bitcoin_price")
-
-        dataloader.updateData(spark.sql(s"""
-                              SELECT ${period}, ROUND(AVG(price),2) AS price
-                              FROM bitcoin_price
-                              WHERE date >= DATE_ADD(CAST('2019-11-01' AS DATE), ${-interval})
-                              AND date < DATE_ADD(CAST('2019-11-01' AS DATE), 0)
-                              GROUP BY ${period}
-                              ORDER BY ${period}
-                              """))
-    }
-
-    // reddit comment score in a time interval aggregated by period
-    def scoreInInterval(period: String, interval: Int): Unit = 
-    {
-	// e.g. interval = "5 YEAR", period = "YEAR(date), WEEK(date)"
-        val df = dataloader.getData()
-        df.createOrReplaceTempView("reddit_comment")
-
-        dataloader.updateData(spark.sql(s"""
-                              SELECT ${period}, SUM(score) AS score
-                              FROM reddit_comment
-                              WHERE date >= DATE_ADD(CAST('2019-11-01' AS DATE), ${-interval}) 
-                              AND date < DATE_ADD(CAST('2019-11-01' AS DATE), 0)
-                              GROUP BY ${period}
-                              ORDER BY ${period}
-                              """))
-    }
-
-    // reddit comment score with sentiment in a time interval aggregated by period
-    def nlpScoreInInterval(period: String, interval: Int): Unit =
-    {
-        // e.g. interval = "5 YEAR", period = "YEAR(date), WEEK(date)"
-        val df = dataloader.getData()
-        df.createOrReplaceTempView("reddit_comment")
-
-        dataloader.updateData(spark.sql(s"""
-                              SELECT ${period}, SUM(score*sentiment_score) AS score
-                              FROM reddit_comment
-                              WHERE date >= DATE_ADD(CAST('2019-11-01' AS DATE), ${-interval})
-                              AND date < DATE_ADD(CAST('2019-11-01' AS DATE), 0)
-                              GROUP BY ${period}
-                              ORDER BY ${period}
-                              """))
-    }
-
     // add sentiment column
     def addSentiment(sentiment: PretrainedPipeline): Unit =
     {
@@ -184,43 +134,6 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
 
         val df = dataloader.getData()
         dataloader.updateData(df.withColumn("sentiment_score", sentimentUDF(col("sentiment_result"))))
-    }
-
-    // add window max within the window size, start from the time
-    def addWindowMax(size: Int): Unit = 
-    {
-        val window = Window.rowsBetween(0, size)
-        val df = dataloader.getData()
-        dataloader.updateData(df.withColumn("window_max", max(df("price")).over(window)))
-    }
-
-    // add window max within the window size, start from the time
-    def addWindowMin(size: Int): Unit =
-    {
-        val window = Window.rowsBetween(0, size)
-        val df = dataloader.getData()
-        dataloader.updateData(df.withColumn("window_min", min(df("price")).over(window)))
-    }
-
-    // add spike column
-    def addSpike(threshold: Float): Unit = 
-    {   
-        val spike = (price: Int, max: Int, min: Int) => {
-	    var (maxDiff,minDiff) = (max-price, price-min)
-            var (maxDiffRatio, minDiffRatio) = (maxDiff/price, minDiff/price)
-            if(maxDiffRatio > threshold){
-                "up"
-            } else if(minDiffRatio > threshold){
-                "down"
-            } else {
-                "no"
-            }            
-        }
-
-        val transform = udf(spike)
-
-        val df = dataloader.getData()
-        dataloader.updateData(df.withColumn("spike", transform(col("price"),col("window_max"),col("window_min"))))
     }
 
 }

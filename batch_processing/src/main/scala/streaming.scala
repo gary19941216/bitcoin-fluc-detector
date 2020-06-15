@@ -45,13 +45,12 @@ object BitFlucStreaming
         val period = "timestamp"
         val interval = -30
         val windowSize = 10
-        val isPast = false
 
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
 
         rcLoader.updateData(rcDF)
-        BitFluc.rcPreprocess(rcPreprocessor, isPast, sentiment)
+        BitFluc.rcPreprocess(rcPreprocessor, sentiment)
 
         val reddit_comment = rcLoader.getData()
         val reddit_comment_window = aggScore(reddit_comment)
