@@ -25,7 +25,7 @@ object BitFlucStreaming
         val df = spark.readStream
                       .format("kafka")
                       .option("kafka.bootstrap.servers", "10.0.0.7:9092,10.0.0.10:9092,10.0.0.13:9092")
-                      .option("subscribe", "test4")
+                      .option("subscribe", "test")
                       .option("startingOffsets","earliest")
                       .load()
 
@@ -42,10 +42,6 @@ object BitFlucStreaming
                    rcKeyValue.col("parsed_value.author")
                    )
 
-        val period = "timestamp"
-        val interval = -30
-        val windowSize = 10
-
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
 
@@ -54,61 +50,34 @@ object BitFlucStreaming
 
         val reddit_comment = rcLoader.getData()
         val reddit_comment_window = aggScore(reddit_comment)
-        val reddit_comment_window_end = reddit_comment_window.select(col("window.end").alias("date"), col("score"))
-        reddit_comment_window.select(col("window.end").alias("date"), col("score")).printSchema()
+        val reddit_comment_window_end = reddit_comment_window.select(col("window.end").alias("time"), col("score"))
+	val reddit_comment_window_time = seperatePDT(reddit_comment_window_end).select("date","hour","minute","second","score")
 
-        println("Finish Writing!!!!!!!!!!!!!!!!!!!!")
-
-   	val query = reddit_comment_window_end.writeStream
-	//.option("checkpointLocation", "/tmp/Spark/")
-	.format("org.apache.spark.sql.cassandra")
-	  .option("keyspace", "bitcoin_reddit")
-	  .option("table", "reddit_streaming_test3")
-	.outputMode("append")
-	.start()
-
-        query.awaitTermination()
-
-       	/*val userSchema = new StructType().add("T_COUNTRY_NAME", "string").add("ORIGIN_COUNTRY_NAME", "string").add("count","integer")
-	val csvDF = spark
-  	.readStream
-  	.option("sep", ";")
-  	.schema(userSchema)      // Specify schema of the csv files
-  	.csv("s3a://gary-bitcoin-price-csv/bitcoin/bitcoin_price/coinbaseUSD.csv") 
-        //.csv("/usr/local/spark/summary.csv")
-
-        csvDF.printSchema()*/
-
-	/*val query = reddit_comment_window.writeStream.format("console")
-	.trigger(Trigger.ProcessingTime(10000))
-	.outputMode(OutputMode.Append)
-	.start()*/
-
-	/*val query = reddit_comment_window_end.writeStream
-  	.outputMode("complete")
-  	.format("console")
-  	.start()
-
-	query.awaitTermination()*/
-
-
-	/*reddit_comment.writeStream
+	val query = reddit_comment_window_time.writeStream
         .foreachBatch { (batchDF, _) => 
             batchDF.printSchema()
-            dbconnect.writeToCassandra(batchDF.select("date","hour","minute","second","score")
-                                       //.withColumn("timestamp", col("timestamp").cast(LongType).cast(TimestampType))
-                                       //.withWatermark("timestamp", "1 minutes").printSchema()
-                                       , "reddit_streaming_test2", "cycling")
-        }.start()*/
+            dbconnect.writeToCassandra(batchDF, "reddit_streaming_test3", "bitcoin_reddit")
+        }.start()
+        query.awaitTermination()
+    }
+
+    def seperatePDT(data: DataFrame): DataFrame =
+    {
+        val timeData = data.withColumn("date", to_date(col("time")))
+                           .withColumn("hour", hour(col("time")))
+                           .withColumn("minute", minute(col("time")))
+                           .withColumn("second", second(col("time"))) 
+	
+	timeData
     }
 
     def aggScore(data: DataFrame): DataFrame = 
     {
         data
         .withColumn("timestamp", col("timestamp").cast(LongType).cast(TimestampType))
-        .withWatermark("timestamp", "2 minutes")
+        .withWatermark("timestamp", "2 hours")
         .groupBy(
-            window(col("timestamp"), "1 minutes", "1 minutes")
+            window(col("timestamp"), "2 hours", "1 hour")
         )
         .agg(sum("score").alias("score")) 
     }
@@ -117,9 +86,9 @@ object BitFlucStreaming
     {
  	data
         .withColumn("timestamp", col("timestamp").cast(LongType).cast(TimestampType))
-        .withWatermark("timestamp", "2 minutes")
+        .withWatermark("timestamp", "2 hours")
         .groupBy(
-            window(col("timestamp"), "1 minutes", "1 minutes")
+            window(col("timestamp"), "2 hours", "1 hour")
         )
         .agg(sum(col("score")*col("sentiment_score")).alias("score")) 
     }

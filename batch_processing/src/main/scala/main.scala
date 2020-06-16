@@ -39,42 +39,53 @@ object BitFluc
 	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", sentiment)
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-	val timeList = List(("date",3650,"ten_year"),("date",1825,"five_year"),("date",1095,"three_year")
-                        ,("date",365,"one_year"),("date,hour",180,"six_month"),("date,hour",90,"three_month")
-			,("date,hour",30,"one_month"),("date,hour,minute",5,"five_day"))
-
-        val windowSize = 5
-        val threshold = 0.05
+	val timeList = List(("date", 3650, "ten_year", 1, 0.1, "1day")
+                            ,("date", 1825, "five_year", 1, 0.1, "1day")
+                            ,("date", 1095, "three_year", 1, 0.1, "1day")
+                            ,("date", 365, "one_year", 1, 0.1, "1day")
+                            ,("date,hour", 180, "six_month", 3, 0.04, "1hour")
+                            ,("date,hour", 90, "three_month", 3, 0.04, "1hour")
+                            ,("date,hour", 30, "one_month", 3, 0.04, "1hour")
+                            ,("date,hour,minute", 5, "five_day", 20, 0.02, "1min"))
 
         val reddit_comment = rcLoader.getData()
         reddit_comment.explain()
 	val bitcoin_price = bpLoader.getData()
+        reddit_comment.persist()
+        bitcoin_price.persist()
   
-	for((period, interval, dbtime) <- timeList){
-            timeJoin(spark, dbconnect,reddit_comment, bitcoin_price, period, interval, dbtime)
-            windowJoin(spark, dbconnect,reddit_comment, bitcoin_price, threshold, windowSize)
+	for((period, interval, dbtime, windowSize, threshold, tolerance) <- timeList){
+            val (reddit_comment_time, bitcoin_price_time) = timeJoin(spark, dbconnect,reddit_comment, bitcoin_price, period, interval, dbtime)
+            windowJoin(spark, dbconnect,reddit_comment_time, bitcoin_price_time, threshold, windowSize, tolerance)
 	}
 
         println("Finish Writing!!!!!!!!!!!!!!!!!!!!")
     } 
     
     // Join reddit and bitcoin data by window feature and write into Cassandra.
-    def windowJoin(spark: SparkSession, dbconnect: DBConnector, reddit_comment: DataFrame, bitcoin_price: DataFrame, threshold: Double, windowSize: Int): Unit = 
+    def windowJoin(spark: SparkSession, dbconnect: DBConnector, reddit_comment: DataFrame, bitcoin_price: DataFrame, threshold: Double, windowSize: Int, tolerance: String): Unit = 
     {
         val bitcoin_price_window = windowProcess(spark, bitcoin_price, windowSize, threshold, "price")
         val reddit_comment_window = windowProcess(spark, reddit_comment, windowSize, threshold, "score")
 
-        val reddit_tsRDD = TimeSeriesRDD.fromDF(dataFrame = reddit_comment_window
-                                                .select("time","score","spike"))(isSorted = true, timeUnit = MILLISECONDS)
+        val bitcoin_price_window_spike = bitcoin_price_window.filter((col("spike") === "up" || col("spike") === "down"))
+        val reddit_comment_window_spike = reddit_comment_window.filter((col("spike") === "up" || col("spike") === "down"))
 
-        val bitcoin_tsRDD = TimeSeriesRDD.fromDF(dataFrame = bitcoin_price_window
-                                                 .select("time","price","spike"))(isSorted = true, timeUnit = MILLISECONDS)
+        val reddit_tsRDD = TimeSeriesRDD.fromDF(dataFrame = reddit_comment_window_spike
+                                                .select("time","score"))(isSorted = true, timeUnit = MILLISECONDS)
 
-        val spikeDF = flintLeftJoin(reddit_tsRDD, bitcoin_tsRDD, "1min") 
+        val bitcoin_tsRDD = TimeSeriesRDD.fromDF(dataFrame = bitcoin_price_window_spike
+                                                 .select("time","price"))(isSorted = true, timeUnit = MILLISECONDS)
+
+        val reddit_bitcoin_spike = flintLeftJoin(reddit_tsRDD, bitcoin_tsRDD, tolerance) 
+
+        val bitcoin_spike_count = bitcoin_price_window_spike.count()
+        val reddit_spike_count = reddit_comment_window_spike.count()
+        val reddit_bitcoin_spike_count = reddit_bitcoin_spike.count()
     }
 
     // Join reddit and bitcoin data by time and write into Cassandra.
-    def timeJoin(spark: SparkSession, dbconnect: DBConnector, reddit_comment: DataFrame, bitcoin_price: DataFrame, period: String, interval: Int, dbtime: String): Unit = 
+    def timeJoin(spark: SparkSession, dbconnect: DBConnector, reddit_comment: DataFrame, bitcoin_price: DataFrame, period: String, interval: Int, dbtime: String): (DataFrame, DataFrame) = 
     {
         val reddit_comment_time = scoreInInterval(spark, reddit_comment, period, interval)
         val bitcoin_price_time = priceInInterval(spark, bitcoin_price, period, interval)
@@ -84,7 +95,9 @@ object BitFluc
 
         val time_body_price = joinBitcoinReddit(spark, period)
 
-        dbconnect.writeToCassandra(time_body_price, "reddit_bitcoin_" + dbtime + "_all_no_sentiment", "bitcoin_reddit") 
+        dbconnect.writeToCassandra(time_body_price, "reddit_bitcoin_" + dbtime + "_all_no_sentiment", "bitcoin_reddit")
+
+        (reddit_comment_time, bitcoin_price_time)
     }
 
     // left join reddit_comment spike on bitcoin_price spike if reddit_commment date is same or before bitcoin_price date
@@ -260,7 +273,7 @@ object BitFluc
         preprocessor.removeNegativeComment()
         preprocessor.removeDeletedAccount()
         sentimentPreprocess(preprocessor, sentiment)
-        preprocessor.dataloader.persist()
+        //preprocessor.dataloader.persist()
     }
 
     // load bitcoin price data and preprocess
@@ -275,7 +288,7 @@ object BitFluc
     {
 	preprocessor.removeInvalidData()
         datePreprocess(preprocessor)
-        preprocessor.dataloader.persist()
+        //preprocessor.dataloader.persist()
     }
 
     // load data for different format
@@ -304,6 +317,7 @@ object BitFluc
           .config("spark.cassandra.auth.password", "cassandra") 
 	  .config("spark.cassandra.connection.port","9042")
           .config("spark.cassandra.output.consistency.level","ONE")
+          //.config("spark.sql.streaming.checkpointLocation", "checkpoint")
           .getOrCreate()
 
         spark.sparkContext.setLogLevel("ERROR")
