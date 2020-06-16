@@ -1,0 +1,7 @@
+[2020-06-07 09:00:24,628] INFO [Controller id=0] Newly added brokers: , deleted brokers: 1, bounced brokers: , all live brokers: 0,2 (kafka.controller.KafkaController)
+[2020-06-07 09:00:24,629] INFO [RequestSendThread controllerId=0] Shutting down (kafka.controller.RequestSendThread)
+[2020-06-07 09:00:24,629] INFO [RequestSendThread controllerId=0] Stopped (kafka.controller.RequestSendThread)
+[2020-06-07 09:00:24,630] INFO [RequestSendThread controllerId=0] Shutdown completed (kafka.controller.RequestSendThread)
+[2020-06-07 09:00:24,634] INFO [Controller id=0] Broker failure callback for 1 (kafka.controller.KafkaController)
+[2020-06-07 09:00:24,667] DEBUG [Controller id=0] Unregister BrokerModifications handler for Vector(1) (kafka.controller.KafkaController)
+[2020-06-07 09:00:24,667] INFO [Controller id=0] Updated broker epochs cache: Map(0 -> 24, 2 -> 169) (kafka.controller.KafkaController)
