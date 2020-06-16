@@ -32,8 +32,8 @@ public class bitcoinProducer {
 
     public static void main(String[] args) throws IOException {
         Regions clientRegion = Regions.DEFAULT_REGION;
-        String bucketName = "gary-reddit-json";
-        String key = "comments/RC_2019-11.json";
+        String bucketName = "gary-bitcoin-price-streaming";
+        String key = "BP_2019-11.json/part-00081-f260137c-5191-4c9c-824f-1d95d544f1cd-c000.json";
 	long range = 100000000000000L;
 	//Thread.currentThread().setContextClassLoader(null);
 
