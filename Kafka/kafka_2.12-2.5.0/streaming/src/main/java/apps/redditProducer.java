@@ -74,7 +74,7 @@ public class redditProducer {
 
     private static void produce(InputStream input) throws IOException {
 	//Assign topicName to string variable
-	String topicName = "test";
+	String topicName = "test17";
 
 	// create instance for properties to access producer configs   
 	Properties props = new Properties();
