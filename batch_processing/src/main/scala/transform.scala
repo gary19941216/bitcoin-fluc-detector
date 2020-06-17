@@ -19,7 +19,7 @@ object Transform
 {
    	
     // Join reddit and bitcoin data by window feature and write into Cassandra.
-    def windowJoin(spark: SparkSession, dbconnect: DBConnector, reddit_comment: DataFrame, bitcoin_price: DataFrame, threshold: Double, windowSize: Int, period: String): Unit =
+    def windowJoin(spark: SparkSession, dbconnect: DBConnector, reddit_comment: DataFrame, bitcoin_price: DataFrame, threshold: Double, windowSize: Int, period: String, dbtime: String, isSentiment: String, subreddit: String): Unit =
     {
 
         val bitcoin_price_window = windowProcess(spark, bitcoin_price, windowSize, threshold, "price")
@@ -28,22 +28,11 @@ object Transform
         val bitcoin_price_window_spike = bitcoin_price_window.filter((col("spike") === "up" || col("spike") === "down"))
         val reddit_comment_window_spike = reddit_comment_window.filter((col("spike") === "up" || col("spike") === "down"))
 
-        val lag_window = org.apache.spark.sql.expressions.Window.orderBy("date")
-
         if(period == "date"){
             val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", date_add(col("date"), 1))
-                                                                             .withColumn("two_step_after", date_add(col("date"), 2))
-                                                                             .withColumn("three_step_after", date_add(col("date"), 3))
-            reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
-        } else if(period == "date,hour"){
-            val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", col("date") + expr("INTERVAL 1 HOUR"))
-                                                                             .withColumn("two_step_after", col("date") + expr("INTERVAL 2 HOURS"))
-                                                                             .withColumn("three_step_after", col("date") + expr("INTERVAL 3 HOURS"))
             reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
         } else {
-            val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", col("date") + expr("INTERVAL 1 MINUTES"))
-                                                                             .withColumn("two_step_after", col("date") + expr("INTERVAL 2 MINUTES"))
-                                                                             .withColumn("three_step_after", col("date") + expr("INTERVAL 3 MINUTES"))
+            val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", col("date") + expr("INTERVAL 1 HOUR"))
             reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
         }
 
@@ -51,28 +40,35 @@ object Transform
 
         val bitcoin_spike_count = bitcoin_price_window_spike.count()
         val affectedSpikedate = spark.sql("""
-                                          SELECT BPWS.date FROM bitcoin_price_window_spike AS BPWS
+                                          SELECT DISTINCT(BPWS.date) FROM bitcoin_price_window_spike AS BPWS
                                           JOIN reddit_comment_window_spike_lag AS RCWSL
-                                          ON RCWSL.date=BPWS.date OR RCWSL.one_step_after=BPWS.date OR RCWSL.two_step_after=BPWS.date OR RCWSL.three_step_after=BPWS.date
-                                          GROUP BY BPWS.date
+                                          ON RCWSL.date=BPWS.date OR RCWSL.one_step_after=BPWS.date
                                           """)
         val affectedSpikeCount = affectedSpikedate.count()
 
         println(bitcoin_spike_count)
         println(affectedSpikeCount)
 
-        println("next")
+        import spark.implicits._
+
+        val spikeDF = Seq((dbtime, subreddit, isSentiment, bitcoin_spike_count, affectedSpikeCount))
+                      .toDF("interval", "subreddit", "nlp", "bitcoin_spike", "bitcoin_reddit_spike")
+
+        dbconnect.writeToCassandra(spikeDF, "spike", "bitcoin_reddit")
+
+        println(dbtime + " " + subreddit + " " + isSentiment)
     } 
 
     // Join reddit and bitcoin data by time and write into Cassandra.
     def timeJoin(spark: SparkSession, dbconnect: DBConnector, reddit_comment: DataFrame, bitcoin_price: DataFrame, period: String, interval: Int, dbtime: String, isSentiment: String, subreddit: String): (DataFrame, DataFrame) =
     {
         var reddit_comment_time = spark.emptyDataFrame
-        if(isSentiment == "with"){
+        if(isSentiment == "with_nlp"){
             reddit_comment_time = nlpScoreInInterval(spark, reddit_comment, period, interval).persist()
         } else {
             reddit_comment_time = scoreInInterval(spark, reddit_comment, period, interval).persist()
         }
+
         val bitcoin_price_time = priceInInterval(spark, bitcoin_price, period, interval).persist()
 
         reddit_comment_time.createOrReplaceTempView("reddit_comment_time")
@@ -80,7 +76,7 @@ object Transform
 
         val bitcoin_reddit_join = joinBitcoinReddit(spark, period)
 
-        dbconnect.writeToCassandra(bitcoin_reddit_join, dbtime + "_" + subreddit + "_" + isSentiment + "_sentiment", "bitcoin_reddit")
+        dbconnect.writeToCassandra(bitcoin_reddit_join, dbtime + "_" + subreddit + "_" + isSentiment, "bitcoin_reddit")
 
         (reddit_comment_time, bitcoin_price_time)
     }
@@ -210,9 +206,6 @@ object Transform
     // filter by specific subreddit
     def filterSubreddit(spark: SparkSession, data: DataFrame, subreddit: String) : DataFrame =
     {
-        /*val list = List("CryptoCurrency","CryptoCurrencyTrading","CryptoCurrencies","Bitcoin")
-        dataloader.updateData(dataloader.getData()
-                              .filter(col("subreddit").isin(list:_*)))*/
         data.createOrReplaceTempView("reddit_comment")
 
         if(subreddit == "all"){

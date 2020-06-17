@@ -40,32 +40,31 @@ object BitFluc
 	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", sentiment)
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-	val timeList = List(("date", 3650, "ten_year", 1, 0.06, "1day")
-                            ,("date", 1825, "five_year", 1, 0.06, "1day")
-                            ,("date", 1095, "three_year", 1, 0.06, "1day")
-                            ,("date", 365, "one_year", 1, 0.06, "1day")
-                            ,("date,hour", 180, "six_month", 5, 0.008, "1hour")
-                            ,("date,hour", 90, "three_month", 5, 0.008, "1hour")
-                            ,("date,hour", 30, "one_month", 5, 0.008, "1hour")
-                            ,("date,hour,minute", 5, "five_day", 60, 0.003, "1min"))
+	val timeList = List(("date", 3650, "ten_year", 1, 0.05)
+                            ,("date", 1825, "five_year", 1, 0.05)
+                            ,("date", 1095, "three_year", 1, 0.05)
+                            ,("date", 365, "one_year", 1, 0.05)
+                            ,("date", 180, "six_month", 1, 0.05)
+                            ,("date", 90, "three_month", 1, 0.05)
+                            ,("date,hour", 30, "one_month", 5, 0.008)
+                            ,("date,hour", 5, "five_day", 5, 0.008))
 
         val reddit_comment = rcLoader.getData()
-        reddit_comment.explain()
 	val bitcoin_price = bpLoader.getData()
         reddit_comment.persist()
         bitcoin_price.persist()
   
-	for((period, interval, dbtime, windowSize, threshold, tolerance) <- timeList){
-            val subredditList = List("all","bitcoin","cryptocurrency","ethereum","tether")
+	for((period, interval, dbtime, windowSize, threshold) <- timeList){
+            val subredditList = List("all","bitcoin","cryptocurrency","ethereum","ripple")
             
             for(subreddit <- subredditList){ 
                 val reddit_comment_subreddit = Transform.filterSubreddit(spark, reddit_comment, subreddit)
-                val withSentiment = List("no", "with")
+                val withSentiment = List("no_nlp", "with_nlp")
                 
                 for(isSentiment <- withSentiment){
                     val (reddit_comment_time, bitcoin_price_time) = Transform.timeJoin(spark, dbconnect,reddit_comment_subreddit, 
                                                                                         bitcoin_price, period, interval, dbtime, isSentiment, subreddit)
-                    Transform.windowJoin(spark, dbconnect,reddit_comment_time, bitcoin_price_time, threshold, windowSize, period)
+                    Transform.windowJoin(spark, dbconnect,reddit_comment_time, bitcoin_price_time, threshold, windowSize, period, dbtime, isSentiment, subreddit)
                 }
             }
 	}
@@ -116,7 +115,6 @@ object BitFluc
        	datePreprocess(preprocessor)
         preprocessor.rcSelectColumn()
         bodyPreprocess(preprocessor)
-        //preprocessor.filterSubreddit()
         preprocessor.removeNegativeComment()
         preprocessor.removeDeletedAccount()
         sentimentPreprocess(preprocessor, sentiment)
@@ -208,7 +206,8 @@ object BitFluc
 			StructField("subreddit", StringType, true),
 			StructField("subreddit_id", StringType, true),
 			StructField("ups", LongType, true)))    
-	schema
+	
+        schema
     }
 }
 
