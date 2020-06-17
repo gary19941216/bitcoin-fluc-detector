@@ -53,6 +53,11 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
         data.write.mode("append").parquet(path)
     }
 
+    def writeJson(path: String) : Unit =
+    {
+        data.write.json(path)
+    }
+
     //print DataFrame Schema
     def printSchema() : Unit =
     {

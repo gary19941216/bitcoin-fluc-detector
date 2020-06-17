@@ -23,6 +23,11 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
         dataloader.loadJson(inputPath).writeParquet(outputPath)
     }
 
+    def transformCsvToJson(inputPath: String, outputPath: String) : Unit = 
+    {
+        dataloader.loadCsv(inputPath).writeJson(outputPath)
+    }
+
     // convert unix time to PDT
     def convertUnixToPDT() : Unit = 
     {
@@ -40,13 +45,21 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
                                 .withColumn("second", second(col("time")))) 
     }
 
-    // select target column
-    def selectColumn() : Unit = 
+    // select target column for reddit
+    def rcSelectColumn() : Unit = 
     {
         val df = dataloader.getData()
         dataloader.updateData(df.select(col("created_utc").alias("timestamp"),
                               col("date"), col("hour"), col("minute"), col("second"),
                               col("author"), col("subreddit"), col("body").alias("text"), col("score")))
+    }
+
+    // select target column for bitcoin
+    def bpSelectColumn() : Unit =
+    {
+        val df = dataloader.getData()
+        dataloader.updateData(df.select(col("created_utc").alias("timestamp"),
+                              col("date"), col("hour"), col("minute"), col("second"), col("price")))
     }
 
     // filter by specific subreddit
@@ -60,10 +73,11 @@ class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)
        dataloader.updateData(spark.sql("""
                               SELECT * FROM reddit_comment
                               WHERE LOWER(subreddit) LIKE "%bitcoin%"
-                                 OR LOWER(subreddit) LIKE "%cryptocurrency%"
+                              """))
+                                 /*OR LOWER(subreddit) LIKE "%cryptocurrency%"
 				 OR LOWER(subreddit) LIKE "%ethereum%"
                                  OR LOWER(subreddit) LIKE "%tether%"
-                              """))
+                              """))*/
     }
 
     // filter by specified keyword

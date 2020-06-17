@@ -21,7 +21,7 @@ class DBConnector(val spark: SparkSession)
         data.write
         .format("org.apache.spark.sql.cassandra")
         .mode("append")
-        .options(Map("table" -> table, "keyspace" -> keyspace)) 
+        .options(Map("table" -> table, "keyspace" -> keyspace))  
         .save()
     }
 }

@@ -1,11 +1,4 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:74:48: missing argument list for method fromDF in object TimeSeriesRDD[0m
-[0m[[0m[31merror[0m] [0m[0mUnapplied methods are only converted to functions when a function type is expected.[0m
-[0m[[0m[31merror[0m] [0m[0mYou can make this conversion explicit by writing `fromDF _` or `fromDF(_)(_,_,_)` instead of `fromDF`.[0m
-[0m[[0m[31merror[0m] [0m[0m        val reddit_tsRDD = TimeSeriesRDD.fromDF(dataFrame = reddit_comment_window_spike[0m
-[0m[[0m[31merror[0m] [0m[0m                                               ^[0m
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/main.scala:77:49: missing argument list for method fromDF in object TimeSeriesRDD[0m
-[0m[[0m[31merror[0m] [0m[0mUnapplied methods are only converted to functions when a function type is expected.[0m
-[0m[[0m[31merror[0m] [0m[0mYou can make this conversion explicit by writing `fromDF _` or `fromDF(_)(_,_,_)` instead of `fromDF`.[0m
-[0m[[0m[31merror[0m] [0m[0m        val bitcoin_tsRDD = TimeSeriesRDD.fromDF(dataFrame = bitcoin_price_window_spike[0m
-[0m[[0m[31merror[0m] [0m[0m                                                ^[0m
-[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:202:22: not found: value Window[0m
+[0m[[0m[31merror[0m] [0m[0m        val window = Window.rowsBetween(0, size)[0m
+[0m[[0m[31merror[0m] [0m[0m                     ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m
