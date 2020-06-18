@@ -24,4 +24,15 @@ class DBConnector(val spark: SparkSession)
         .options(Map("table" -> table, "keyspace" -> keyspace))  
         .save()
     }
+
+    // overwrite data in cassandra
+    def overwriteCassandra(data: DataFrame, table: String, keyspace: String): Unit =
+    {
+        data.write
+        .format("org.apache.spark.sql.cassandra")
+        .mode("overwrite").option("confirm.truncate","true")
+        .options(Map("table" -> table, "keyspace" -> keyspace))
+        .save()
+    }
+
 }

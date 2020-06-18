@@ -13,7 +13,6 @@ import org.apache.spark.sql.expressions.Window
 import dataload.DataLoader
 import preprocess.Preprocessor
 import dbconnector.DBConnector
-import com.twosigma.flint.timeseries._
 import scala.concurrent.duration._
 import transform.Transform
 
@@ -40,14 +39,14 @@ object BitFluc
 	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", sentiment)
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-	val timeList = List(("date", 3650, "ten_year", 1, 0.05)
-                            ,("date", 1825, "five_year", 1, 0.05)
-                            ,("date", 1095, "three_year", 1, 0.05)
-                            ,("date", 365, "one_year", 1, 0.05)
-                            ,("date", 180, "six_month", 1, 0.05)
-                            ,("date", 90, "three_month", 1, 0.05)
-                            ,("date,hour", 30, "one_month", 5, 0.008)
-                            ,("date,hour", 5, "five_day", 5, 0.008))
+	val timeList = List(("date", 3650, "ten_year", 1, 0.045)
+                            ,("date", 1825, "five_year", 1, 0.045)
+                            ,("date", 1095, "three_year", 1, 0.045)
+                            ,("date", 365, "one_year", 1, 0.045)
+                            ,("date", 180, "six_month", 1, 0.045)
+                            ,("date", 90, "three_month", 1, 0.045)
+                            ,("date,hour", 30, "one_month", 10, 0.01)
+                            ,("date,hour", 5, "five_day", 10, 0.01))
 
         val reddit_comment = rcLoader.getData()
 	val bitcoin_price = bpLoader.getData()
@@ -155,8 +154,9 @@ object BitFluc
 	val spark = SparkSession.builder
           .appName("all time interval, all subreddit, no sentiment, with persist")
           .master("spark://10.0.0.11:7077")
+          .config("spark.executor.cores", 6)  
           .config("spark.default.parallelism", 400)  
-          .config("spark.cassandra.connection.host", "10.0.0.5")
+          .config("spark.cassandra.connection.host", "10.0.0.6")
           .config("spark.cassandra.auth.username", "cassandra")            
           .config("spark.cassandra.auth.password", "cassandra") 
 	  .config("spark.cassandra.connection.port","9042")

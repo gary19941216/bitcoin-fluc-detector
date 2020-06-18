@@ -1,5 +1,6 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/scala/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:53:24: value toDF is not a member of Seq[(String, String, String, Long, Long)][0m
-[0m[[0m[31merror[0m] [0m[0mpossible cause: maybe a semicolon is missing before `value toDF'?[0m
-[0m[[0m[31merror[0m] [0m[0m                      .toDF("interval", "subreddit", "nlp", "bitcoin_spike", "bitcoin_reddit_spike")[0m
-[0m[[0m[31merror[0m] [0m[0m                       ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/streaming.scala:78:34: type mismatch;[0m
+[0m[[0m[31merror[0m] [0m[0m found   : org.apache.spark.sql.streaming.DataStreamWriter[org.apache.spark.sql.Row][0m
+[0m[[0m[31merror[0m] [0m[0m required: org.apache.spark.sql.streaming.StreamingQuery[0m
+[0m[[0m[31merror[0m] [0m[0m		redditQueryList = reddit_query :: redditQueryList[0m
+[0m[[0m[31merror[0m] [0m[0m		                               ^[0m
 [0m[[0m[31merror[0m] [0m[0mone error found[0m

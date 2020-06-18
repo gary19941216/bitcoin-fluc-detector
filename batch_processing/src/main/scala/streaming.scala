@@ -11,6 +11,7 @@ import dataload.DataLoader
 import preprocess.Preprocessor
 import dbconnector.DBConnector
 import bitfluc.BitFluc
+import transform.Transform
 
 import org.apache.spark.sql.streaming._
 
@@ -18,7 +19,7 @@ object BitFlucStreaming
 {
     def main(args: Array[String])
     {
-        val spark = BitFluc.getSparkSession()
+        val spark = getSparkSession()
         val dbconnect = new DBConnector(spark)
         val sentiment = BitFluc.loadNLPModel() 
       
@@ -42,24 +43,9 @@ object BitFlucStreaming
         val reddit_comment = rcLoader.getData()
         val bitcoin_price = bpLoader.getData()
 
-        val reddit_comment_window = sumScore(reddit_comment)
         val bitcoin_price_window = avgPrice(bitcoin_price)
-
-        val reddit_comment_window_end = reddit_comment_window.select(col("window.end").alias("time"), col("score"))
-	val reddit_comment_window_time = seperatePDT(reddit_comment_window_end).select("date","hour","score")
-
 	val bitcoin_price_window_end = bitcoin_price_window.select(col("window.end").alias("time"), col("price"))
 	val bitcoin_price_window_time = seperatePDT(bitcoin_price_window_end).select("date","hour","price")
-
-        val period = "date,hour"
-
-        /*reddit_comment_window_time.createOrReplaceTempView("reddit_comment_time")
-        bitcoin_price_window_time.createOrReplaceTempView("bitcoin_price_time")
-	val bitcoin_reddit_join = BitFluc.joinBitcoinReddit(spark, period)*/
-
-        /*val bitcoin_reddit_join = reddit_comment_window_time.join(
-                                    bitcoin_price_window_time
-                                  )*/
 
 	val bitcoin_query = bitcoin_price_window_time.writeStream
         .foreachBatch { (batchDF, _) => 
@@ -67,16 +53,35 @@ object BitFlucStreaming
             dbconnect.writeToCassandra(batchDF, "bitcoin_streaming_test_new", "bitcoin_reddit")
         }.start()
 
-        //bitcoin_query.awaitTermination()
+        var redditQueryList  = List[StreamingQuery]()
 
-	val reddit_query = reddit_comment_window_time.writeStream
-        .foreachBatch { (batchDF, _) =>
-            batchDF.printSchema()
-            dbconnect.writeToCassandra(batchDF, "reddit_streaming_test_new", "bitcoin_reddit")
-        }.start()
+        val subredditList = List("all","bitcoin","cryptocurrency","ethereum","ripple")
+
+        for(subreddit <- subredditList){
+            val reddit_comment_subreddit = Transform.filterSubreddit(spark, reddit_comment, subreddit)
+            val withSentiment = List("no_nlp", "with_nlp")
+
+            for(isSentiment <- withSentiment){
+		
+		val reddit_comment_window = sumScore(reddit_comment_subreddit)
+                val reddit_comment_window_end = reddit_comment_window.select(col("window.end").alias("time"), col("score"))
+                val reddit_comment_window_time = seperatePDT(reddit_comment_window_end).select("date","hour","score")
+	
+		val reddit_query = reddit_comment_window_time.writeStream
+		.foreachBatch { (batchDF, _) =>
+		    batchDF.printSchema()
+	    	    dbconnect.writeToCassandra(batchDF, "reddit_streaming_test_" + subreddit + "_" + isSentiment, "bitcoin_reddit")
+		}start()
+
+		redditQueryList = reddit_query :: redditQueryList
+            }
+        }
 
         bitcoin_query.awaitTermination()
-        reddit_query.awaitTermination()
+
+	for(reddit_query <- redditQueryList){
+            reddit_query.awaitTermination()
+        }
     }
 
     // read bitcoin stream data
@@ -171,5 +176,24 @@ object BitFlucStreaming
             window(col("reddit_timestamp"), "2 hours", "1 hour")
         )
         .agg(sum(col("score")*col("sentiment_score")).alias("score")) 
+    }
+
+    def getSparkSession(): SparkSession =
+    {
+        val spark = SparkSession.builder
+          .appName("spark streaming")
+          .master("spark://10.0.0.11:7077")
+          .config("spark.executor.cores", 6)
+          .config("spark.default.parallelism", 400)
+          .config("spark.cassandra.connection.host", "10.0.0.6")
+          .config("spark.cassandra.auth.username", "cassandra")
+          .config("spark.cassandra.auth.password", "cassandra")
+          .config("spark.cassandra.connection.port","9042")
+          .config("spark.cassandra.output.consistency.level","ONE")
+          .getOrCreate()
+
+        spark.sparkContext.setLogLevel("ERROR")
+
+        spark
     }
 }

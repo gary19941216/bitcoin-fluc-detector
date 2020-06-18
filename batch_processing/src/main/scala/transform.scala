@@ -28,26 +28,52 @@ object Transform
         val bitcoin_price_window_spike = bitcoin_price_window.filter((col("spike") === "up" || col("spike") === "down"))
         val reddit_comment_window_spike = reddit_comment_window.filter((col("spike") === "up" || col("spike") === "down"))
 
-        if(period == "date"){
-            val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", date_add(col("date"), 1))
-            reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
-        } else {
-            val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", col("date") + expr("INTERVAL 1 HOUR"))
-            reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
-        }
+        val bitcoin_spike_count = bitcoin_price_window_spike.count()
+
+        var affectedSpikedate = spark.emptyDataFrame 
 
         bitcoin_price_window_spike.createOrReplaceTempView("bitcoin_price_window_spike")
 
-        val bitcoin_spike_count = bitcoin_price_window_spike.count()
-        val affectedSpikedate = spark.sql("""
-                                          SELECT DISTINCT(BPWS.date) FROM bitcoin_price_window_spike AS BPWS
+        if(period == "date"){
+            val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", date_add(col("date"), 1))
+            reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
+            bitcoin_price_window_spike.createOrReplaceTempView("bitcoin_price_window_spike")
+		
+	    affectedSpikedate = spark.sql("""
+                                          SELECT BPWS.date FROM bitcoin_price_window_spike AS BPWS
                                           JOIN reddit_comment_window_spike_lag AS RCWSL
                                           ON RCWSL.date=BPWS.date OR RCWSL.one_step_after=BPWS.date
+					  GROUP BY BPWS.date
                                           """)
+        } else {
+
+            val combineDateHour = (date: String, hour: Int) => {
+                val newDate = date + " " + hour.toString
+                newDate
+            }
+
+            val transformDateHour = udf(combineDateHour)
+
+            val reddit_comment_window_spike_date_hour = reddit_comment_window_spike.withColumn("date_hour", transformDateHour(col("date"), col("hour")))
+            val bitcoin_price_window_spike_date_hour = bitcoin_price_window_spike.withColumn("date_hour", transformDateHour(col("date"), col("hour")))
+
+            val reddit_comment_window_spike_lag = reddit_comment_window_spike_date_hour.withColumn("one_step_after", col("date_hour") + expr("INTERVAL 1 HOUR"))
+                                                                                     .withColumn("two_step_after", col("date_hour") + expr("INTERVAL 2 HOUR"))
+            reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
+            bitcoin_price_window_spike_date_hour.createOrReplaceTempView("bitcoin_price_window_spike_date_hour")
+
+	    affectedSpikedate = spark.sql("""
+                                          SELECT BPWS.date_hour FROM bitcoin_price_window_spike_date_hour AS BPWS
+                                          JOIN reddit_comment_window_spike_lag AS RCWSL
+                                          ON RCWSL.date_hour=BPWS.date_hour OR RCWSL.one_step_after=BPWS.date_hour OR RCWSL.two_step_after=BPWS.date_hour
+					  GROUP BY BPWS.date_hour
+                                          """)
+        }
+
         val affectedSpikeCount = affectedSpikedate.count()
 
-        println(bitcoin_spike_count)
-        println(affectedSpikeCount)
+        print(bitcoin_spike_count)
+        print(affectedSpikeCount)
 
         import spark.implicits._
 
@@ -147,19 +173,11 @@ object Transform
             """)
 
             joinData
-        } else if(period == "date,hour"){
+        } else {
             val joinData = spark.sql("""
             SELECT BP.date, BP.hour, RC.score, BP.price
             FROM reddit_comment_time AS RC
             JOIN bitcoin_price_time AS BP ON RC.date=BP.date AND RC.hour=BP.hour
-            """)
-
-            joinData
-        } else {
-            val joinData = spark.sql("""
-            SELECT BP.date, BP.hour, BP.minute, RC.score, BP.price
-            FROM reddit_comment_time AS RC
-            JOIN bitcoin_price_time AS BP ON RC.date=BP.date AND RC.hour=BP.hour AND RC.minute=BP.minute
             """)
 
             joinData
@@ -175,9 +193,9 @@ object Transform
                 "no"
             } else {
                 var (maxDiffRatio, minDiffRatio) = (maxDiff/value, minDiff/value)
-                if(maxDiffRatio > threshold){
+                if(maxDiffRatio >= threshold){
                     "up"
-                } else if(minDiffRatio > threshold){
+                } else if(minDiffRatio >= threshold){
                     "down"
                 } else {
                     "no"
@@ -195,9 +213,9 @@ object Transform
     // adding column retrieved from window function
     def windowProcess(spark: SparkSession, data: DataFrame, size: Int, threshold: Double, column: String): DataFrame =
     {
-        val window = Window.rowsBetween(0, size)
+        val window = Window.orderBy("date").rowsBetween(0, size)
         val windowData = data.withColumn("window_max", max(data(column)).over(window))
-                             .withColumn("window_min", max(data(column)).over(window))
+                             .withColumn("window_min", min(data(column)).over(window))
         val spikeData = addSpike(spark, windowData, threshold, column)
 
         spikeData
