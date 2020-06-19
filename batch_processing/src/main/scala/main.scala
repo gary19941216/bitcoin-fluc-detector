@@ -154,7 +154,7 @@ object BitFluc
 	val spark = SparkSession.builder
           .appName("all time interval, all subreddit, no sentiment, with persist")
           .master("spark://10.0.0.11:7077")
-          .config("spark.executor.cores", 6)  
+          //.config("spark.executor.cores", 6)  
           .config("spark.default.parallelism", 400)  
           .config("spark.cassandra.connection.host", "10.0.0.6")
           .config("spark.cassandra.auth.username", "cassandra")            

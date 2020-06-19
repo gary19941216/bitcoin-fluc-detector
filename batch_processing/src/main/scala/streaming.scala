@@ -31,8 +31,8 @@ object BitFlucStreaming
         val bpLoader = new DataLoader(spark, bpSchema)
         val bpPreprocessor = new Preprocessor(spark, bpLoader)
 
-        val rcDF = readRedditStream(spark, rcSchema, "test11")
-        val bpDF = readBitcoinStream(spark, bpSchema, "test18")
+        val rcDF = readRedditStream(spark, rcSchema, "reddittest")
+        val bpDF = readBitcoinStream(spark, bpSchema, "bitcointest")
         
         rcLoader.updateData(rcDF)
         bpLoader.updateData(bpDF)
@@ -49,8 +49,8 @@ object BitFlucStreaming
 
 	val bitcoin_query = bitcoin_price_window_time.writeStream
         .foreachBatch { (batchDF, _) => 
-            batchDF.printSchema()
-            dbconnect.writeToCassandra(batchDF, "bitcoin_streaming_test", "bitcoin_reddit")
+            //batchDF.printSchema()
+            dbconnect.writeToCassandra(batchDF, "bitcoin_streaming_test5", "bitcoin_reddit")
         }.start()
 
         var redditQueryList  = List[StreamingQuery]()
@@ -69,8 +69,8 @@ object BitFlucStreaming
 	
 		val reddit_query = reddit_comment_window_time.writeStream
 		.foreachBatch { (batchDF, _) =>
-		    batchDF.printSchema()
-	    	    dbconnect.writeToCassandra(batchDF, "reddit_streaming_test_" + subreddit + "_" + isSentiment, "bitcoin_reddit")
+		    //batchDF.printSchema()
+	    	    dbconnect.writeToCassandra(batchDF, "reddit_streaming_test5_" + subreddit + "_" + isSentiment, "bitcoin_reddit")
 		}start()
 
 		redditQueryList = reddit_query :: redditQueryList
@@ -184,7 +184,7 @@ object BitFlucStreaming
           .appName("spark streaming")
           .master("spark://10.0.0.11:7077")
           //.config("spark.executor.cores", 18)
-          .config("spark.default.parallelism", 400)
+          .config("spark.default.parallelism", 50)
           .config("spark.cassandra.connection.host", "10.0.0.6")
           .config("spark.cassandra.auth.username", "cassandra")
           .config("spark.cassandra.auth.password", "cassandra")
