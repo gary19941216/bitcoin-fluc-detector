@@ -39,12 +39,12 @@ object BitFluc
 	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", sentiment)
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-	val timeList = List(("date", 3650, "ten_year", 1, 0.045)
-                            ,("date", 1825, "five_year", 1, 0.045)
-                            ,("date", 1095, "three_year", 1, 0.045)
-                            ,("date", 365, "one_year", 1, 0.045)
-                            ,("date", 180, "six_month", 1, 0.045)
-                            ,("date", 90, "three_month", 1, 0.045)
+	val timeList = List( ("date", 3650, "ten_year", 1, 0.05)
+                            ,("date", 1825, "five_year", 1, 0.05)
+                            ,("date", 1095, "three_year", 1, 0.05)
+                            ,("date", 365, "one_year", 1, 0.05)
+                            ,("date", 180, "six_month", 1, 0.05)
+                            ,("date", 90, "three_month", 1, 0.05)
                             ,("date,hour", 30, "one_month", 10, 0.01)
                             ,("date,hour", 5, "five_day", 10, 0.01))
 

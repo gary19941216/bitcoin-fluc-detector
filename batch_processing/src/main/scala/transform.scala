@@ -40,10 +40,9 @@ object Transform
             bitcoin_price_window_spike.createOrReplaceTempView("bitcoin_price_window_spike")
 		
 	    affectedSpikedate = spark.sql("""
-                                          SELECT BPWS.date FROM bitcoin_price_window_spike AS BPWS
+                                          SELECT DISTINCT(BPWS.date) FROM bitcoin_price_window_spike AS BPWS
                                           JOIN reddit_comment_window_spike_lag AS RCWSL
                                           ON RCWSL.date=BPWS.date OR RCWSL.one_step_after=BPWS.date
-					  GROUP BY BPWS.date
                                           """)
         } else {
 
@@ -63,10 +62,9 @@ object Transform
             bitcoin_price_window_spike_date_hour.createOrReplaceTempView("bitcoin_price_window_spike_date_hour")
 
 	    affectedSpikedate = spark.sql("""
-                                          SELECT BPWS.date_hour FROM bitcoin_price_window_spike_date_hour AS BPWS
+                                          SELECT DISTINCT(BPWS.date_hour) FROM bitcoin_price_window_spike_date_hour AS BPWS
                                           JOIN reddit_comment_window_spike_lag AS RCWSL
                                           ON RCWSL.date_hour=BPWS.date_hour OR RCWSL.one_step_after=BPWS.date_hour OR RCWSL.two_step_after=BPWS.date_hour
-					  GROUP BY BPWS.date_hour
                                           """)
         }
 
