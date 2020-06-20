@@ -32,6 +32,7 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
         this
     }
 
+    //load parquet data from file
     def loadParquet(path: String) : DataLoader = 
     {
         data = spark.read.schema(schema).parquet(path)
@@ -56,6 +57,7 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
         data.write.mode("append").parquet(path)
     }
 
+    //create new json file
     def writeJson(path: String) : Unit =
     {
         data.write.json(path)
