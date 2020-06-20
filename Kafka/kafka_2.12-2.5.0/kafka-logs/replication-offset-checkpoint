@@ -21,7 +21,7 @@ __consumer_offsets 23 12
 __consumer_offsets 49 9
 test21 2 3621480
 test31 1 0
-reddittest 0 12217882
+reddittest 0 12261616
 test18 2 530188
 __consumer_offsets 47 6
 test13 0 0
@@ -38,12 +38,12 @@ test10 2 367512
 test30 0 0
 __consumer_offsets 15 15
 test16 0 649932
-bitcointest 2 81950
+bitcointest 2 91112
 test30 1 0
 test1 1 177842
 __consumer_offsets 38 6
 __consumer_offsets 17 15
-bitcointest 0 64565
+bitcointest 0 75774
 test2 2 5552029
 test31 2 0
 test9 0 177199
@@ -72,7 +72,7 @@ __consumer_offsets 45 12
 __consumer_offsets 1 9
 __consumer_offsets 5 38
 __consumer_offsets 26 9
-reddittest 2 12235114
+reddittest 2 12278686
 test11 0 10471805
 __consumer_offsets 29 12
 test2 0 5530454
