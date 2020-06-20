@@ -15,40 +15,41 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-//import util.properties.packages;
 import java.util.Properties;
-
-//import simple producer packages
 import org.apache.kafka.clients.producer.Producer;
-
-//import KafkaProducer packages
 import org.apache.kafka.clients.producer.KafkaProducer;
-
-//import ProducerRecord packages
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 
 public class bitcoinProducer {
 
     public static void main(String[] args) throws IOException {
-        Regions clientRegion = Regions.DEFAULT_REGION;
-        String bucketName = "gary-bitcoin-price-streaming";
+        
+        // s3 bucket name 
+	String bucketName = "gary-bitcoin-price-streaming";
+	// s3 file key
         String key = "BP_2019-11.json/part-00081-f260137c-5191-4c9c-824f-1d95d544f1cd-c000.json";
+	// length of bytes
 	long range = 100000000000000L;
-	//Thread.currentThread().setContextClassLoader(null);
+	// Kafka topic
+	String topic = "bitcointest";
 
+	// s3 object initailizing
         S3Object fullObject = null, objectPortion = null, headerOverrideObject = null;
         try {
+	    // initialize Amazon s3 client
             AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
                     .withRegion("us-west-2")
                     .withCredentials(new ProfileCredentialsProvider())
                     .build();
 
-            // Get a range of bytes from an object and print the bytes.
+            // Get a range of bytes from an object.
             GetObjectRequest rangeObjectRequest = new GetObjectRequest(bucketName, key)
-                    .withRange(0, range);
+                    					.withRange(0, range);
+	    // Get portion of Object
             objectPortion = s3Client.getObject(rangeObjectRequest);
-	    produce(objectPortion.getObjectContent());
+	    // produce the content to Kafka topic
+	    produce(objectPortion.getObjectContent(), topic);
 
         } catch (AmazonServiceException e) {
             // The call was transmitted successfully, but Amazon S3 couldn't process 
@@ -72,48 +73,52 @@ public class bitcoinProducer {
         }
     }
 
-    private static void produce(InputStream input) throws IOException {
-	//Assign topicName to string variable
-	String topicName = "test";
-
+    // produce s3 object content to Kafka topic
+    private static void produce(InputStream input, String topicName) throws IOException {
 	// create instance for properties to access producer configs   
 	Properties props = new Properties();
 	      
-	//Assign localhost id
+	// Assign ip for bootstrap servers
 	props.put("bootstrap.servers", "10.0.0.7:9092");
 	      
-	//Set acknowledgements for producer requests.      
+	// Set acknowledgements for producer requests.      
 	props.put("acks", "all");
 	      
-	//If the request fails, the producer can automatically retry,
+	// If the request fails, the producer can automatically retry,
 	props.put("retries", 1);
 	      
-	//Specify buffer size in config
-	props.put("batch.size", 16384);
+	// Specify buffer size in config
+	props.put("batch.size", 10);
 	      
-	//Reduce the no of requests less than 0   
+	// Reduce the no of requests less than 0   
 	props.put("linger.ms", 1);
 	      
-	//The buffer.memory controls the total amount of memory available to the producer for buffering.   
+	// The buffer.memory controls the total amount of memory available to the producer for buffering.   
 	props.put("buffer.memory", 33554432);
 	      
+	// serializer for key
 	props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 		 
+	// serializer for key
 	props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 	      
+	// Creating a Kafka Producer with specified properties
 	Producer<String, String> producer = new KafkaProducer<String, String>(props);
-		    
+		   
+        // Creating a InputStreamReader object	
 	InputStreamReader isReader = new InputStreamReader(input);
-        //Creating a BufferedReader object
+        // Creating a BufferedReader object
         BufferedReader reader = new BufferedReader(isReader);
+	// Creating a StringBuffer object
         StringBuffer sb = new StringBuffer();
+	// Creating string for storing input string
         String str;
-	int i = 0;
+	// initialize key with 0
+	int key = 0;
+	// assign string from BufferedReader to str, and produce key-value pair to Kafka topic
         while((str = reader.readLine())!= null){
-            producer.send(new ProducerRecord<String, String>(topicName,
-	    Integer.toString(i++), str));
+	    // producer send key-value pair to Kafka topic
+            producer.send(new ProducerRecord<String, String>(topicName, Integer.toString(key++), str));
         }	
-
     }
-
 }
