@@ -4,8 +4,10 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.DataFrame
 
+// dataloader for data
 class DataLoader(val spark: SparkSession, val schema : StructType)
 {
+    // store the dataframe currently in dataloader
     private var data : DataFrame = _
 
     //load csv data from file
@@ -42,6 +44,7 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
         data
     }
 
+    //update data in object
     def updateData(data: DataFrame) : Unit =
     {
         this.data = data

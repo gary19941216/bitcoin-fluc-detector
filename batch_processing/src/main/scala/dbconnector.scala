@@ -4,6 +4,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.DataFrame
 
+// dbconnector to connect to cassandra
 class DBConnector(val spark: SparkSession)
 {
     // read data from cassandra

@@ -1,4 +1,10 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/streaming.scala:80:9: not found: value bitcoin_query[0m
-[0m[[0m[31merror[0m] [0m[0m        bitcoin_query.awaitTermination()[0m
-[0m[[0m[31merror[0m] [0m[0m        ^[0m
-[0m[[0m[31merror[0m] [0m[0mone error found[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/unify.scala:86:55: not found: value period[0m
+[0m[[0m[31merror[0m] [0m[0m        val reddit_score = sumScore(reddit_real_time, period)[0m
+[0m[[0m[31merror[0m] [0m[0m                                                      ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/unify.scala:89:57: not found: value period[0m
+[0m[[0m[31merror[0m] [0m[0m        val bitcoin_price = avgPrice(bitcoin_real_time, period)[0m
+[0m[[0m[31merror[0m] [0m[0m                                                        ^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/unify.scala:94:12: not found: value period[0m
+[0m[[0m[31merror[0m] [0m[0m        if(period == "date"){[0m
+[0m[[0m[31merror[0m] [0m[0m           ^[0m
+[0m[[0m[31merror[0m] [0m[0mthree errors found[0m

@@ -11,7 +11,7 @@ import org.apache.spark.sql.expressions.Window
 import dataload.DataLoader
 import preprocess.Preprocessor
 import dbconnector.DBConnector
-import bitfluc.BitFluc
+import etl.ETL
 
 import org.apache.spark.sql.streaming._
 
@@ -70,8 +70,8 @@ object Transform
 
         val affectedSpikeCount = affectedSpikedate.count()
 
-        print(bitcoin_spike_count)
-        print(affectedSpikeCount)
+        println(bitcoin_spike_count)
+        println(affectedSpikeCount)
 
         import spark.implicits._
 
@@ -86,6 +86,7 @@ object Transform
     // Join reddit and bitcoin data by time and write into Cassandra.
     def timeJoin(spark: SparkSession, dbconnect: DBConnector, reddit_comment: DataFrame, bitcoin_price: DataFrame, period: String, interval: Int, dbtime: String, isSentiment: String, subreddit: String): (DataFrame, DataFrame) =
     {
+        val bitcoin_price_time = priceInInterval(spark, bitcoin_price, period, interval).persist()
         var reddit_comment_time = spark.emptyDataFrame
         if(isSentiment == "with_nlp"){
             reddit_comment_time = nlpScoreInInterval(spark, reddit_comment, period, interval).persist()
@@ -93,14 +94,15 @@ object Transform
             reddit_comment_time = scoreInInterval(spark, reddit_comment, period, interval).persist()
         }
 
-        val bitcoin_price_time = priceInInterval(spark, bitcoin_price, period, interval).persist()
-
         reddit_comment_time.createOrReplaceTempView("reddit_comment_time")
         bitcoin_price_time.createOrReplaceTempView("bitcoin_price_time")
 
         val bitcoin_reddit_join = joinBitcoinReddit(spark, period)
 
-        dbconnect.writeToCassandra(bitcoin_reddit_join, dbtime + "_" + subreddit + "_" + isSentiment, "bitcoin_reddit")
+        val tableName = dbtime + "_" + subreddit + "_" + isSentiment
+        val keyspace = "bitcoin_reddit"
+
+        dbconnect.writeToCassandra(bitcoin_reddit_join, tableName, keyspace)
 
         (reddit_comment_time, bitcoin_price_time)
     }
@@ -155,7 +157,7 @@ object Transform
                   GROUP BY ${period}
                   ORDER BY ${period}
                   """)
-
+	
         scoreData
     }
 
@@ -185,7 +187,7 @@ object Transform
     // add spike column
     def addSpike(spark: SparkSession, data: DataFrame, threshold: Double, column: String): DataFrame =
     {
-        val spike = (value: Int, max: Int, min: Int) => {
+        val spike = (value: Double, max: Double, min: Double) => {
             var (maxDiff,minDiff) = (max-value, value-min)
             if(value == 0){
                 "no"
@@ -211,10 +213,12 @@ object Transform
     // adding column retrieved from window function
     def windowProcess(spark: SparkSession, data: DataFrame, size: Int, threshold: Double, column: String): DataFrame =
     {
-        val window = Window.orderBy("date").rowsBetween(0, size)
+        val window = Window.rowsBetween(0, size)
         val windowData = data.withColumn("window_max", max(data(column)).over(window))
                              .withColumn("window_min", min(data(column)).over(window))
         val spikeData = addSpike(spark, windowData, threshold, column)
+
+        spikeData.show(50)
 
         spikeData
     }
@@ -224,13 +228,17 @@ object Transform
     {
         data.createOrReplaceTempView("reddit_comment")
 
-        if(subreddit == "all"){
+	if(subreddit == "all"){
+            spark.sql("""
+                      SELECT * FROM reddit_comment
+                      """)
+	} else if(subreddit == "all_below"){
             spark.sql("""
                       SELECT * FROM reddit_comment
                       WHERE LOWER(subreddit) LIKE "%bitcoin%"
                       OR LOWER(subreddit) LIKE "%cryptocurrency%"
                       OR LOWER(subreddit) LIKE "%ethereum%"
-                      OR LOWER(subreddit) LIKE "%tether%"
+                      OR LOWER(subreddit) LIKE "%ripple%"
                       """)
         } else {
             spark.sql(s"""

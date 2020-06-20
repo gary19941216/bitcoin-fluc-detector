@@ -1,4 +1,4 @@
-package bitflucstreaming
+package streaming
 
 import java.sql.Timestamp
 import org.apache.spark.sql._
@@ -10,94 +10,126 @@ import org.apache.spark.sql.functions._
 import dataload.DataLoader
 import preprocess.Preprocessor
 import dbconnector.DBConnector
-import bitfluc.BitFluc
+import etl.ETL
 import transform.Transform
 
 import org.apache.spark.sql.streaming._
 
-object BitFlucStreaming
+object Streaming
 {
+    // get spark session
+    private val spark = getSparkSession() 
+    // initialize DBConnector object
+    private val dbconnect = new DBConnector(spark)
+    // load nlp model
+    private val sentiment = ETL.loadNLPModel()
+    // get schema of Reddit comment
+    private val rcSchema = ETL.getRCSchema()
+    // get schema of Bitcoin price
+    private val bpSchema = ETL.getBPSchema()
+    // Kafka topic for Reddit
+    private val redditTopic = "reddittest"
+    // Kafka topic for Bitcoin
+    private val bitcoinTopic = "bitcointest"
+
     def main(args: Array[String])
-    {
-        val spark = getSparkSession()
-        val dbconnect = new DBConnector(spark)
-        val sentiment = BitFluc.loadNLPModel() 
-      
-        val rcSchema = BitFluc.getRCSchema()
-        val bpSchema = BitFluc.getBPSchema()
-
-        val rcLoader = new DataLoader(spark, rcSchema)
-        val rcPreprocessor = new Preprocessor(spark, rcLoader)
-        val bpLoader = new DataLoader(spark, bpSchema)
-        val bpPreprocessor = new Preprocessor(spark, bpLoader)
-
-        val rcDF = readRedditStream(spark, rcSchema, "reddittest")
-        val bpDF = readBitcoinStream(spark, bpSchema, "bitcointest")
+    { 
+        // intialize DataLoader for Reddit comment and Bitcoin Price
+        val (rcLoader, bpLoader) = (new DataLoader(spark, rcSchema), new DataLoader(spark, bpSchema))
+        // intialize Preprocessor for Reddit comment and Bitcoin Price
+        val (rcPreprocessor, bpPreprocessor) = (new Preprocessor(spark, rcLoader), new Preprocessor(spark, bpLoader))
+        // read streaming dataframe from Kafka topic
+        val (rcStreamDF, bpStreamDF) = (readRedditStream(rcSchema, redditTopic), readBitcoinStream(bpSchema, bitcoinTopic))
         
-        rcLoader.updateData(rcDF)
-        bpLoader.updateData(bpDF)
-        
-        BitFluc.rcPreprocess(rcPreprocessor, sentiment)
-        BitFluc.bpPreprocess(bpPreprocessor)
+        // load streaming dataframe into DataLoader
+        rcLoader.updateData(rcStreamDF)
+        bpLoader.updateData(bpStreamDF)
 
-        val reddit_comment = rcLoader.getData()
-        val bitcoin_price = bpLoader.getData()
+        // preprocess data in DataLoader
+        ETL.rcPreprocess(rcPreprocessor, sentiment)
+        ETL.bpPreprocess(bpPreprocessor)
 
+        // get preprocessed data in DataLoader
+        val (reddit_comment, bitcoin_price) = (rcLoader.getData(), bpLoader.getData())
+
+        // get average price within the time window
         val bitcoin_price_window = avgPrice(bitcoin_price)
+        // rename window.end column to time and select time and price column
 	val bitcoin_price_window_end = bitcoin_price_window.select(col("window.end").alias("time"), col("price"))
+        // seperate time column to date, hour, price and select them 
 	val bitcoin_price_window_time = seperatePDT(bitcoin_price_window_end).select("date","hour","price")
 
+        // start query for writing stream into Cassandra database
 	val bitcoin_query = bitcoin_price_window_time.writeStream
+        // microbatch processing
         .foreachBatch { (batchDF, _) => 
-            //batchDF.printSchema()
-            dbconnect.writeToCassandra(batchDF, "bitcoin_streaming_test5", "bitcoin_reddit")
+            val table = "bitcoin_streaming_test5"
+            val keyspace = "bitcoin_reddit"
+            // append data to Cassandra
+            dbconnect.writeToCassandra(batchDF, table, keyspace)
         }.start()
 
+        // List for all of the Reddit query
         var redditQueryList  = List[StreamingQuery]()
+        // target subreddit
+        val subredditList = List("all","all_below","bitcoin","cryptocurrency","ethereum","ripple")
 
-        val subredditList = List("all","bitcoin","cryptocurrency","ethereum","ripple")
-
+        // loop through all the subreddit
         for(subreddit <- subredditList){
+            // get only relevant subreddit
             val reddit_comment_subreddit = Transform.filterSubreddit(spark, reddit_comment, subreddit)
+            // List for using nlp sentiment analysis or not
             val withSentiment = List("no_nlp", "with_nlp")
-
+            
+            // loop through both of them
             for(isSentiment <- withSentiment){
 		
+                // get score sum within the time window
 		val reddit_comment_window = sumScore(reddit_comment_subreddit)
+                // rename window.end column to time and select time and score column
                 val reddit_comment_window_end = reddit_comment_window.select(col("window.end").alias("time"), col("score"))
+                // seperate time column to date, hour, price and select them
                 val reddit_comment_window_time = seperatePDT(reddit_comment_window_end).select("date","hour","score")
 	
+                // start query for writing stream into Cassandra database
 		val reddit_query = reddit_comment_window_time.writeStream
+                // microbatch processing
 		.foreachBatch { (batchDF, _) =>
-		    //batchDF.printSchema()
-	    	    dbconnect.writeToCassandra(batchDF, "reddit_streaming_test5_" + subreddit + "_" + isSentiment, "bitcoin_reddit")
-		}start()
-
+	    	    val table = "reddit_streaming_test5_" + subreddit + "_" + isSentiment
+                    val keyspace = "bitcoin_reddit"
+                    // append data to Cassandra
+                    dbconnect.writeToCassandra(batchDF, table, keyspace)
+		}.start()
+                // add reddit query to list
 		redditQueryList = reddit_query :: redditQueryList
             }
         }
 
+        // await termination for bitcoin query
         bitcoin_query.awaitTermination()
-
+        // await termination for all Reddit query
 	for(reddit_query <- redditQueryList){
             reddit_query.awaitTermination()
         }
     }
 
     // read bitcoin stream data
-    def readBitcoinStream(spark: SparkSession, bpSchema: StructType, topic: String): DataFrame =
+    def readBitcoinStream(bpSchema: StructType, topic: String): DataFrame =
     {
+        // get streaming dataframe from kafka topic
         val df = spark.readStream
                       .format("kafka")
                       .option("kafka.bootstrap.servers", "10.0.0.7:9092,10.0.0.10:9092,10.0.0.13:9092")
                       .option("subscribe", topic)
                       .option("startingOffsets","earliest")
                       .load()
-        
+
+        // cast key as string and read value with json format
         val bpKeyValue = df.select(
           col("key").cast("string"),
           from_json(col("value").cast("string"), bpSchema).alias("parsed_value")) 
         
+        // select target column from previous dataframe
         val bpDF = bpKeyValue.select(
                    bpKeyValue.col("parsed_value.price"),
                    bpKeyValue.col("parsed_value.created_utc")
@@ -107,19 +139,21 @@ object BitFlucStreaming
     }
 
     // read reddit stream data
-    def readRedditStream(spark: SparkSession, rcSchema: StructType, topic: String): DataFrame =
+    def readRedditStream(rcSchema: StructType, topic: String): DataFrame =
     {
+        // get streaming dataframe from kafka topic
         val df = spark.readStream
                       .format("kafka")
                       .option("kafka.bootstrap.servers", "10.0.0.7:9092,10.0.0.10:9092,10.0.0.13:9092")
                       .option("subscribe", topic)
                       .option("startingOffsets","earliest")
                       .load()
-
+        // cast key as string and read value with json format
         val rcKeyValue = df.select(
           col("key").cast("string"),
           from_json(col("value").cast("string"), rcSchema).alias("parsed_value"))
 
+        // select target column from previous dataframe
         val rcDF = rcKeyValue.select(
                    rcKeyValue.col("parsed_value.body"),
                    rcKeyValue.col("parsed_value.score"),
@@ -146,11 +180,15 @@ object BitFlucStreaming
     def avgPrice(data: DataFrame): DataFrame = 
     {
         data
+        // create new column with Spark TimestampType
         .withColumn("bitcoin_timestamp", col("timestamp").cast(LongType).cast(TimestampType))
+        // add on watermark to tolerance late data within 2 hours
         .withWatermark("bitcoin_timestamp", "2 hours")
+        // group by window of 2 hours every 1 hour
         .groupBy(
             window(col("bitcoin_timestamp"), "2 hours", "1 hour")
         )
+        // average the price and names it as price
         .agg(avg("price").alias("price"))
     }
 
@@ -158,11 +196,15 @@ object BitFlucStreaming
     def sumScore(data: DataFrame): DataFrame = 
     {
         data
+        // create new column with Spark TimestampType
         .withColumn("reddit_timestamp", col("timestamp").cast(LongType).cast(TimestampType))
+        // add on watermark to tolerance late data within 2 hours
         .withWatermark("reddit_timestamp", "2 hours")
+        // group by window of 2 hours every 1 hour
         .groupBy(
             window(col("reddit_timestamp"), "2 hours", "1 hour")
         )
+        // sum up the score and names it as score
         .agg(sum("score").alias("score")) 
     }
 
@@ -170,21 +212,28 @@ object BitFlucStreaming
     def sumNLPScore(data: DataFrame): DataFrame = 
     {
  	data
+        // create new column with Spark TimestampType
         .withColumn("reddit_timestamp", col("timestamp").cast(LongType).cast(TimestampType))
+        // add on watermark to tolerance late data within 2 hours
         .withWatermark("reddit_timestamp", "2 hours")
+        // group by window of 2 hours every 1 hour
         .groupBy(
             window(col("reddit_timestamp"), "2 hours", "1 hour")
         )
+        // sum up the score with sentiment score and names it as score
         .agg(sum(col("score")*col("sentiment_score")).alias("score")) 
     }
 
+    // get spark session for streaming
     def getSparkSession(): SparkSession =
     {
         val spark = SparkSession.builder
           .appName("spark streaming")
+          // standalone mode with master ip and port
           .master("spark://10.0.0.11:7077")
-          //.config("spark.executor.cores", 18)
+          // set parallelism for spark job
           .config("spark.default.parallelism", 50)
+          // ip address for one of the cassandra seeds
           .config("spark.cassandra.connection.host", "10.0.0.6")
           .config("spark.cassandra.auth.username", "cassandra")
           .config("spark.cassandra.auth.password", "cassandra")
@@ -192,6 +241,7 @@ object BitFlucStreaming
           .config("spark.cassandra.output.consistency.level","ONE")
           .getOrCreate()
 
+        // set log level to ERROR
         spark.sparkContext.setLogLevel("ERROR")
 
         spark

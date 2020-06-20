@@ -1,4 +1,4 @@
-package bitfluc
+package etl
 
 import com.twosigma.flint.timeseries._
 import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
@@ -16,7 +16,7 @@ import dbconnector.DBConnector
 import scala.concurrent.duration._
 import transform.Transform
 
-object BitFluc
+object ETL
 {
     def main(args: Array[String])
     {   
@@ -28,7 +28,7 @@ object BitFluc
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
         val rcJsonPath = "s3a://gary-reddit-json/comments/*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comment/part-*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comment/part-25435*"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
@@ -39,8 +39,8 @@ object BitFluc
 	rcloadPreprocess(rcPreprocessor, rcParquetPath, "parquet", sentiment)
 	bploadPreprocess(bpPreprocessor, bpCsvPath, "csv")
 
-	val timeList = List( ("date", 3650, "ten_year", 1, 0.05)
-                            ,("date", 1825, "five_year", 1, 0.05)
+	val timeList = List( //("date", 3650, "ten_year", 1, 0.05)
+                            ("date", 1825, "five_year", 1, 0.05)
                             ,("date", 1095, "three_year", 1, 0.05)
                             ,("date", 365, "one_year", 1, 0.05)
                             ,("date", 180, "six_month", 1, 0.05)
@@ -54,7 +54,7 @@ object BitFluc
         bitcoin_price.persist()
   
 	for((period, interval, dbtime, windowSize, threshold) <- timeList){
-            val subredditList = List("all","bitcoin","cryptocurrency","ethereum","ripple")
+            val subredditList = List("all","all_below","bitcoin","cryptocurrency","ethereum","ripple")
             
             for(subreddit <- subredditList){ 
                 val reddit_comment_subreddit = Transform.filterSubreddit(spark, reddit_comment, subreddit)
