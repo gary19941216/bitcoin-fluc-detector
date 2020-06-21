@@ -53,13 +53,13 @@ object ETL
 
 	// List of different time interval and period
 	val timeList = List( //("date", 3650, "ten_year", 1, 0.05)
-                            ("date", 1825, "five_year", 1, 0.05)
-                            ,("date", 1095, "three_year", 1, 0.05)
-                            ,("date", 365, "one_year", 1, 0.05)
-                            ,("date", 180, "six_month", 1, 0.05)
-                            ,("date", 90, "three_month", 1, 0.05)
-                            ,("date,hour", 30, "one_month", 5, 0.02)
-                            ,("date,hour", 5, "five_day", 5, 0.02))
+                            ("date", 1825, "five_year", 1, 0.1)
+                            ,("date", 1095, "three_year", 1, 0.1)
+                            ,("date", 365, "one_year", 1, 0.1)
+                            ,("date", 180, "six_month", 1, 0.1)
+                            ,("date", 90, "three_month", 1, 0.1)
+                            ,("date,hour", 30, "one_month", 5, 0.03)
+                            ,("date,hour", 5, "five_day", 5, 0.03))
 
         // get reddit comment data from dataloader
         val reddit_comment = rcLoader.getData()

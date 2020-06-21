@@ -1,0 +1,7 @@
+[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:19:1: expected class or object definition[0m
+[0m[[0m[31merror[0m] [0m[0mClass Transform(val spark: SparkSession, val dbconnect: DBConnector)[0m
+[0m[[0m[31merror[0m] [0m[0m^[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:20:1: expected class or object definition[0m
+[0m[[0m[31merror[0m] [0m[0m{[0m
+[0m[[0m[31merror[0m] [0m[0m^[0m
+[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m
