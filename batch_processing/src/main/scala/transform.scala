@@ -159,8 +159,10 @@ class Transform(val spark: SparkSession, val dbconnect: DBConnector)
         val affectedSpikedate = spark.sql("""
                                       SELECT DISTINCT(BPWS.date) FROM bitcoin_price_window_spike AS BPWS
                                       JOIN reddit_comment_window_spike_lag AS RCWSL
-                                      ON RCWSL.date=BPWS.date OR RCWSL.one_step_after=BPWS.date
-	    	    	              """)
+                                      ON RCWSL.one_step_after=BPWS.date
+                                      """)
+                                      /*OR RCWSL.date=BPWS.date
+	    	    	              """)*/
 
         affectedSpikedate.count()
     }

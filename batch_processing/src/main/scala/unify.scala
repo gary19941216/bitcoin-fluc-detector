@@ -23,10 +23,13 @@ object Unify
 {
     // get spark session
     private val spark = getSparkSession()
+
     // initialize DBConnector object
     private val dbconnect = new DBConnector(spark)
+
     // load spark session and dbconnect into Transform object
     private val transform = new Transform(spark, dbconnect)
+
     // load nlp model
     private val sentiment = ETL.loadNLPModel() 
 
@@ -45,8 +48,8 @@ object Unify
                             ,("date", 365, "one_year", 1, 0.05)
                             ,("date", 180, "six_month", 1, 0.05)
                             ,("date", 90, "three_month", 1, 0.05)
-                            ,("date,hour", 30, "one_month", 5, 0.008)
-                            ,("date,hour", 5, "five_day", 5, 0.008)) 
+                            ,("date,hour", 30, "one_month", 5, 0.02)
+                            ,("date,hour", 5, "five_day", 5, 0.02)) 
 
         // loop through the time list
 	for((period, interval, dbtime, windowSize, threshold) <- timeList){
@@ -217,7 +220,7 @@ object Unify
     def getSparkSession(): SparkSession =
     {
         val spark = SparkSession.builder
-          .appName("test")
+          .appName("unify historical and real time data")
           // standalone mode with master ip and port
           .master("spark://10.0.0.11:7077")
           // set parallelism for spark job
@@ -228,7 +231,6 @@ object Unify
           .config("spark.cassandra.auth.password", "cassandra")
           .config("spark.cassandra.connection.port","9042")
           .config("spark.cassandra.output.consistency.level","ONE")
-          //.config("spark.executor.cores",6)
           .getOrCreate()
 
         // set log level to ERROR

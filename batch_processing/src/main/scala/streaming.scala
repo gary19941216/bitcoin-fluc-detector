@@ -18,30 +18,34 @@ import org.apache.spark.sql.streaming._
 object Streaming
 {
     // get spark session
-    private val spark = getSparkSession() 
+    private val spark = getSparkSession()
+
     // initialize DBConnector object
     private val dbconnect = new DBConnector(spark)
+
     // load spark session and dbconnect into Transform object
     private val transform = new Transform(spark, dbconnect)
+
     // load nlp model
     private val sentiment = ETL.loadNLPModel()
-    // get schema of Reddit comment
-    private val rcSchema = ETL.getRCSchema()
-    // get schema of Bitcoin price
-    private val bpSchema = ETL.getBPSchema()
+
+    // get schema of Reddit comment and Bitcoin price
+    private val (rcSchema, bpSchema) = (ETL.getRCSchema(), ETL.getBPSchema())
+
+    // intialize DataLoader for Reddit comment and Bitcoin Price
+    private val (rcLoader, bpLoader) = (new DataLoader(spark, rcSchema), new DataLoader(spark, bpSchema))
+
+    // intialize Preprocessor for Reddit comment and Bitcoin Price
+    private val (rcPreprocessor, bpPreprocessor) = (new Preprocessor(spark, rcLoader), new Preprocessor(spark, bpLoader))
+
     // Kafka topic for Reddit
     private val redditTopic = "reddittest"
+
     // Kafka topic for Bitcoin
     private val bitcoinTopic = "bitcointest"
 
     def main(args: Array[String])
     {
-
-        // intialize DataLoader for Reddit comment and Bitcoin Price
-        val (rcLoader, bpLoader) = (new DataLoader(spark, rcSchema), new DataLoader(spark, bpSchema))
-
-        // intialize Preprocessor for Reddit comment and Bitcoin Price
-        val (rcPreprocessor, bpPreprocessor) = (new Preprocessor(spark, rcLoader), new Preprocessor(spark, bpLoader))
 
         // read streaming dataframe from Kafka topic
         val (rcStreamDF, bpStreamDF) = (readRedditStream(rcSchema, redditTopic), readBitcoinStream(bpSchema, bitcoinTopic))
