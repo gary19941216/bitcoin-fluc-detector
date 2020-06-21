@@ -13,14 +13,16 @@ Bitcoin price fluctuates dramatically, it would be invaluable to find an insight
 
 
 ## **Data Pipeline** 
-(https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data%20pipeline.png)
+[ ](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data%20pipeline.png)
 
 ## **Data source** 
 [Reddit comments](https://files.pushshift.io/reddit/comments/) data from 2006 to 2019 (4.9TB uncompressed)
+
 [Bitcoin price](http://api.bitcoincharts.com/v1/csv/) data (10GB)
 
 ## **Repo directory structure**
 
+```bash
 ├── README.md
 ├── dashboard
 │   └── frontend.py
@@ -49,6 +51,7 @@ Bitcoin price fluctuates dramatically, it would be invaluable to find an insight
     └── target
         └── scala-2.11
             └── bit_fluc_2.11-1.0.jar
+```
             
 
 
