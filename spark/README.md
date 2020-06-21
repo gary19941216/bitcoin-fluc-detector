@@ -1,26 +1,19 @@
 ## **How to use Spark NLP**
 
   1.  create new folder and go to the new folder:
-  
-      run command:
       
       ```sudo mkdir /usr/local/spark_nlp``` and ```cd /usr/local/spark_nlp```
       
   2.  download sentiment analysis pretrained pipeline:
-  
-      run command:
       
-      ```wget https://s3.amazonaws.com/auxdata.johnsnowlabs.com/public/models/analyze_sentiment_en_2.4.0_2.4_1580483464667.zip```
+      ```wget https://s3.amazonaws.com/auxdata.johnsnowlabs.com/public/models/
+      analyze_sentiment_en_2.4.0_2.4_1580483464667.zip```
       
   3.  install unzip:
-  
-      run command:
       
       ```sudo apt-get install unzip```
       
   4.  unzip ```analyze_sentiment_en_2.4.0_2.4_1580483464667.zip```:
-  
-      run command: 
       
       ```unzip analyze_sentiment_en_2.4.0_2.4_1580483464667.zip```
       
