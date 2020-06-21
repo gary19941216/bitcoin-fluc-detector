@@ -187,7 +187,6 @@ def show_dashboard(session):
             dcc.Dropdown(
                 id='time-dropdown',
                 options=[
-                    {'label': '1 DAY', 'value': 'current'},
                     {'label': '5 DAY', 'value': 'five_day'},
                     {'label': '1 MONTH', 'value': 'one_month'},
                     {'label': '3 MONTH', 'value': 'three_month'},
