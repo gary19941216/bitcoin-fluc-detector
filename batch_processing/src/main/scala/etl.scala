@@ -28,7 +28,7 @@ object ETL
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
         val rcJsonPath = "s3a://gary-reddit-json/comments/*"
-        val rcParquetPath = "s3a://gary-reddit-parquet/comment/part-25435*"
+        val rcParquetPath = "s3a://gary-reddit-parquet/comment/part-*"
 
         val bpSchema = getBPSchema()
         val bpLoader = new DataLoader(spark, bpSchema)
