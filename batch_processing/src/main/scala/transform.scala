@@ -92,59 +92,76 @@ object Transform
     // get the count of bitcoin spike which are affected by Reddit
     def getAffectedSpikeCount(spark: SparkSession, reddit_comment_window_spike: DataFrame, bitcoin_price_window_spike: DataFrame, period: String): Long =
     {
-        // initialize empty dataframe
-        var affectedSpikedate = spark.emptyDataFrame
+        // initialize Long type
+        var affectedSpikeCount: Long = 0
 
         // if period equals to date
         if(period == "date"){
-
-            // add new column one_step_after with the date one day after the current date
-            val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", date_add(col("date"), 1))
-
-            // create temp view for reddit_comment_window_spike_lag
-            reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
-            // create temp view for bitcoin_price_window_spike
-            bitcoin_price_window_spike.createOrReplaceTempView("bitcoin_price_window_spike")
-
-            // join reddit and bitcoin if reddit spike is on the same day as bitcoin spike or just 1 day before bitcoin spike
-            affectedSpikedate = spark.sql("""
-                                          SELECT DISTINCT(BPWS.date) FROM bitcoin_price_window_spike AS BPWS
-                                          JOIN reddit_comment_window_spike_lag AS RCWSL
-                                          ON RCWSL.date=BPWS.date OR RCWSL.one_step_after=BPWS.date
-                                          """)
+            affectedSpikeCount = getAffectedSpikeCountDate(spark, reddit_comment_window_spike, bitcoin_price_window_spike)
         // if period equals to date,hour
         } else {
-
-            // combine date and hour to new date string
-            val combineDateHour = (date: String, hour: Int) => {
-                val newDate = date + " " + hour.toString
-                newDate
-            }
-
-            // user defined function
-            val transformDateHour = udf(combineDateHour)
-
-            // add new column date_hour with combined date hour string type
-            val reddit_comment_window_spike_date_hour = reddit_comment_window_spike.withColumn("date_hour", transformDateHour(col("date"), col("hour")))
-            val bitcoin_price_window_spike_date_hour = bitcoin_price_window_spike.withColumn("date_hour", transformDateHour(col("date"), col("hour")))
-
-            // add new column one_step_after and two_step_after with the date one hour after and two hour after the current date
-            val reddit_comment_window_spike_lag = reddit_comment_window_spike_date_hour.withColumn("one_step_after", col("date_hour") + expr("INTERVAL 1 HOUR"))
-                                                                                     .withColumn("two_step_after", col("date_hour") + expr("INTERVAL 2 HOUR"))
-            // create temp view for reddit_comment_window_spike_lag
-            reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
-            // create temp view for bitcoin_price_window_spike_date_hour
-            bitcoin_price_window_spike_date_hour.createOrReplaceTempView("bitcoin_price_window_spike_date_hour")
-
-            // join reddit and bitcoin if reddit spike is on the same day and hour as bitcoin spike or just 1 hour or 2 hour before bitcoin spike
-            affectedSpikedate = spark.sql("""
-                                          SELECT DISTINCT(BPWS.date_hour) FROM bitcoin_price_window_spike_date_hour AS BPWS
-                                          JOIN reddit_comment_window_spike_lag AS RCWSL
-                                          ON RCWSL.date_hour=BPWS.date_hour OR RCWSL.one_step_after=BPWS.date_hour OR RCWSL.two_step_after=BPWS.date_hour
-                                          """)
+	    affectedSpikeCount = getAffectedSpikeCountDateHour(spark, reddit_comment_window_spike, bitcoin_price_window_spike)
         }
 
-        // return the count of affected bitcoin spike
+        affectedSpikeCount
+    }
+
+    // get affected spike count for period of date and hour
+    def getAffectedSpikeCountDateHour(spark: SparkSession, reddit_comment_window_spike: DataFrame, bitcoin_price_window_spike: DataFrame): Long =
+    {
+
+	// combine date and hour to new date string
+        val combineDateHour = (date: String, hour: Int) => {
+            val newDate = date + " " + hour.toString
+            newDate
+        }
+
+        // user defined function
+        val transformDateHour = udf(combineDateHour)
+
+        // add new column date_hour with combined date hour string type
+        val reddit_comment_window_spike_date_hour = reddit_comment_window_spike.withColumn("date_hour", transformDateHour(col("date"), col("hour")))
+        val bitcoin_price_window_spike_date_hour = bitcoin_price_window_spike.withColumn("date_hour", transformDateHour(col("date"), col("hour")))
+
+        // add new column one_step_after and two_step_after with the date one hour after and two hour after the current date
+        val reddit_comment_window_spike_lag = reddit_comment_window_spike_date_hour.withColumn("one_step_after", col("date_hour") + expr("INTERVAL 1 HOUR"))
+                                                                                     .withColumn("two_step_after", col("date_hour") + expr("INTERVAL 2 HOUR"))
+        
+	// create temp view for reddit_comment_window_spike_lag
+        reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
+        // create temp view for bitcoin_price_window_spike_date_hour
+        bitcoin_price_window_spike_date_hour.createOrReplaceTempView("bitcoin_price_window_spike_date_hour")
+
+        // join reddit and bitcoin if reddit spike is on the same day and hour as bitcoin spike or just 1 hour or 2 hour before bitcoin spike
+        val affectedSpikedate = spark.sql("""
+                                      SELECT DISTINCT(BPWS.date_hour) FROM bitcoin_price_window_spike_date_hour AS BPWS
+                                      JOIN reddit_comment_window_spike_lag AS RCWSL
+                                      ON RCWSL.date_hour=BPWS.date_hour OR RCWSL.one_step_after=BPWS.date_hour OR RCWSL.two_step_after=BPWS.date_hour
+                                      """)
+	
+	affectedSpikedate.count()
+    }
+
+    // get affected spike count for period of date
+    def getAffectedSpikeCountDate(spark: SparkSession, reddit_comment_window_spike: DataFrame, bitcoin_price_window_spike: DataFrame): Long = 
+    {
+
+	// add new column one_step_after with the date one day after the current date  
+        val reddit_comment_window_spike_lag = reddit_comment_window_spike.withColumn("one_step_after", date_add(col("date"), 1))
+
+        // create temp view for reddit_comment_window_spike_lag
+        reddit_comment_window_spike_lag.createOrReplaceTempView("reddit_comment_window_spike_lag")
+
+        // create temp view for bitcoin_price_window_spike
+        bitcoin_price_window_spike.createOrReplaceTempView("bitcoin_price_window_spike")
+
+        // join reddit and bitcoin if reddit spike is on the same day as bitcoin spike or just 1 day before bitcoin spike
+        val affectedSpikedate = spark.sql("""
+                                      SELECT DISTINCT(BPWS.date) FROM bitcoin_price_window_spike AS BPWS
+                                      JOIN reddit_comment_window_spike_lag AS RCWSL
+                                      ON RCWSL.date=BPWS.date OR RCWSL.one_step_after=BPWS.date
+	    	    	              """)
+
         affectedSpikedate.count()
     }
 

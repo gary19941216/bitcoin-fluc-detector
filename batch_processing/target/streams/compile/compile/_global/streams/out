@@ -1,9 +1,4 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:26:5: not found: value period[0m
-[0m[[0m[31merror[0m] [0m[0m	if(period == "date"){[0m
-[0m[[0m[31merror[0m] [0m[0m	   ^[0m
-[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:60:32: type mismatch;[0m
-[0m[[0m[31merror[0m] [0m[0m found   : Long[0m
-[0m[[0m[31merror[0m] [0m[0m required: Int[0m
-[0m[[0m[31merror[0m] [0m[0m        affectedSpikedate.count()[0m
-[0m[[0m[31merror[0m] [0m[0m                               ^[0m
-[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:161:13: affectedSpikedate is already defined as variable affectedSpikedate[0m
+[0m[[0m[31merror[0m] [0m[0m        val affectedSpikedate = spark.sql("""[0m
+[0m[[0m[31merror[0m] [0m[0m            ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m
