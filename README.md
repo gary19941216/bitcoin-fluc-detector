@@ -1,1 +1,3 @@
-# **Bitcoin-Fluc-Detector** 
+# **Reddit-Trend-Bitcoin** 
+
+
