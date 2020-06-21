@@ -6,8 +6,8 @@
       
   2.  download sentiment analysis pretrained pipeline:
       
-      ```wget https://s3.amazonaws.com/auxdata.johnsnowlabs.com/public/models/
-      analyze_sentiment_en_2.4.0_2.4_1580483464667.zip```
+      ```wget https://s3.amazonaws.com/auxdata.johnsnowlabs.com/public/models/```
+      ```analyze_sentiment_en_2.4.0_2.4_1580483464667.zip```
       
   3.  install unzip:
       
