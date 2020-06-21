@@ -21,6 +21,8 @@ object Streaming
     private val spark = getSparkSession() 
     // initialize DBConnector object
     private val dbconnect = new DBConnector(spark)
+    // load spark session and dbconnect into Transform object
+    private val transform = new Transform(spark, dbconnect)
     // load nlp model
     private val sentiment = ETL.loadNLPModel()
     // get schema of Reddit comment
@@ -33,11 +35,14 @@ object Streaming
     private val bitcoinTopic = "bitcointest"
 
     def main(args: Array[String])
-    { 
+    {
+
         // intialize DataLoader for Reddit comment and Bitcoin Price
         val (rcLoader, bpLoader) = (new DataLoader(spark, rcSchema), new DataLoader(spark, bpSchema))
+
         // intialize Preprocessor for Reddit comment and Bitcoin Price
         val (rcPreprocessor, bpPreprocessor) = (new Preprocessor(spark, rcLoader), new Preprocessor(spark, bpLoader))
+
         // read streaming dataframe from Kafka topic
         val (rcStreamDF, bpStreamDF) = (readRedditStream(rcSchema, redditTopic), readBitcoinStream(bpSchema, bitcoinTopic))
         
@@ -54,13 +59,16 @@ object Streaming
 
         // get average price within the time window
         val bitcoin_price_window = avgPrice(bitcoin_price)
+
         // rename window.end column to time and select time and price column
 	val bitcoin_price_window_end = bitcoin_price_window.select(col("window.end").alias("time"), col("price"))
+
         // seperate time column to date, hour, price and select them 
 	val bitcoin_price_window_time = seperatePDT(bitcoin_price_window_end).select("date","hour","price")
 
         // start query for writing stream into Cassandra database
 	val bitcoin_query = bitcoin_price_window_time.writeStream
+
         // microbatch processing
         .foreachBatch { (batchDF, _) => 
             val table = "bitcoin_streaming_test5"
@@ -71,13 +79,16 @@ object Streaming
 
         // List for all of the Reddit query
         var redditQueryList  = List[StreamingQuery]()
+
         // target subreddit
         val subredditList = List("all","all_below","bitcoin","cryptocurrency","ethereum","ripple")
 
         // loop through all the subreddit
         for(subreddit <- subredditList){
+        
             // get only relevant subreddit
-            val reddit_comment_subreddit = Transform.filterSubreddit(spark, reddit_comment, subreddit)
+            val reddit_comment_subreddit = transform.filterSubreddit(reddit_comment, subreddit)
+
             // List for using nlp sentiment analysis or not
             val withSentiment = List("no_nlp", "with_nlp")
             
@@ -86,13 +97,16 @@ object Streaming
 		
                 // get score sum within the time window
 		val reddit_comment_window = sumScore(reddit_comment_subreddit)
+
                 // rename window.end column to time and select time and score column
                 val reddit_comment_window_end = reddit_comment_window.select(col("window.end").alias("time"), col("score"))
+
                 // seperate time column to date, hour, price and select them
                 val reddit_comment_window_time = seperatePDT(reddit_comment_window_end).select("date","hour","score")
 	
                 // start query for writing stream into Cassandra database
 		val reddit_query = reddit_comment_window_time.writeStream
+
                 // microbatch processing
 		.foreachBatch { (batchDF, _) =>
 	    	    val table = "reddit_streaming_test5_" + subreddit + "_" + isSentiment
@@ -100,6 +114,7 @@ object Streaming
                     // append data to Cassandra
                     dbconnect.writeToCassandra(batchDF, table, keyspace)
 		}.start()
+
                 // add reddit query to list
 		redditQueryList = reddit_query :: redditQueryList
             }
@@ -107,6 +122,7 @@ object Streaming
 
         // await termination for bitcoin query
         bitcoin_query.awaitTermination()
+
         // await termination for all Reddit query
 	for(reddit_query <- redditQueryList){
             reddit_query.awaitTermination()

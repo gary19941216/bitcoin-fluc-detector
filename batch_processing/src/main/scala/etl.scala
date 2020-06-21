@@ -19,11 +19,15 @@ import transform.Transform
 object ETL
 {
     def main(args: Array[String])
-    {   
+    {
+
         val spark = getSparkSession()
         val dbconnect = new DBConnector(spark)
         val sentiment = loadNLPModel()
-        
+
+        // load spark session and dbconnect into Transform object   
+        val transform = new Transform(spark, dbconnect)
+
         val rcSchema = getRCSchema()
         val rcLoader = new DataLoader(spark, rcSchema)
         val rcPreprocessor = new Preprocessor(spark, rcLoader)
@@ -57,13 +61,13 @@ object ETL
             val subredditList = List("all","all_below","bitcoin","cryptocurrency","ethereum","ripple")
             
             for(subreddit <- subredditList){ 
-                val reddit_comment_subreddit = Transform.filterSubreddit(spark, reddit_comment, subreddit)
+                val reddit_comment_subreddit = transform.filterSubreddit(reddit_comment, subreddit)
                 val withSentiment = List("no_nlp", "with_nlp")
                 
                 for(isSentiment <- withSentiment){
-                    val (reddit_comment_time, bitcoin_price_time) = Transform.timeJoin(spark, dbconnect,reddit_comment_subreddit, 
-                                                                                        bitcoin_price, period, interval, dbtime, isSentiment, subreddit)
-                    Transform.windowJoin(spark, dbconnect,reddit_comment_time, bitcoin_price_time, threshold, windowSize, period, dbtime, isSentiment, subreddit)
+                    val (reddit_comment_time, bitcoin_price_time) = transform.timeJoin(reddit_comment_subreddit, bitcoin_price, 
+                                                                                       period, interval, dbtime, isSentiment, subreddit)
+                    transform.windowJoin(reddit_comment_time, bitcoin_price_time, threshold, windowSize, period, dbtime, isSentiment, subreddit)
                 }
             }
 	}

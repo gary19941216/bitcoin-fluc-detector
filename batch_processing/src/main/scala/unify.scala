@@ -25,8 +25,10 @@ object Unify
     private val spark = getSparkSession()
     // initialize DBConnector object
     private val dbconnect = new DBConnector(spark)
+    // load spark session and dbconnect into Transform object
+    private val transform = new Transform(spark, dbconnect)
     // load nlp model
-    private val sentiment = ETL.loadNLPModel()  
+    private val sentiment = ETL.loadNLPModel() 
 
     def main(args: Array[String])
     {
@@ -79,7 +81,7 @@ object Unify
                     val (reddit_comment_time, bitcoin_price_time) = getUnionData(period, reddit_real_time, bitcoin_real_time, reddit_historical, bitcoin_historical)
 
                     // calculate and update the spike count to cassandra
-                    Transform.windowJoin(spark, dbconnect, reddit_comment_time, bitcoin_price_time, threshold, windowSize, period, dbtime, isSentiment, subreddit)
+                    transform.windowJoin(reddit_comment_time, bitcoin_price_time, threshold, windowSize, period, dbtime, isSentiment, subreddit)
                 }
             }
         }
