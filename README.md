@@ -26,18 +26,27 @@ Bitcoin price fluctuates dramatically, it would be invaluable to find an insight
 ├── README.md
 ├── dashboard
 │   └── frontend.py
-├── Airflow
+├── cassandra
+    ├── cassandra.yaml
+    └── cassandra-rackdc.properties
+├── airflow
 │   └── sparkDAG.py
-├── Kafka
-│   └── producer
-│       ├── pom.xml
-│       ├── src
-│           └── main
-│               └── java
-│                   └── apps
-│                       ├── bitcoinProducer.java
-│                       └── redditProducer.java        
-└── Spark
+├── kafka
+│   └── kafka_2.12-2.5.0
+│       ├── config
+│       │   ├── server-1.properties
+│       │   ├── server-2.properties
+│       │   ├── server-3.properties
+│       │   └── zookeeper.properties
+│       └── producer
+│           ├── pom.xml
+│           ├── src
+│               └── main
+│                   └── java
+│                       └── apps
+│                           ├── bitcoinProducer.java
+│                           └── redditProducer.java        
+└── spark
     ├── built.sbt
     ├── src
     │   └── main
