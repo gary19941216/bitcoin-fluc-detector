@@ -28,8 +28,10 @@ class Transform(val spark: SparkSession, val dbconnect: DBConnector)
         val reddit_comment_window = windowProcess(reddit_comment, windowSize, threshold, "score")
 
         // filter out data only with spike exist
-        val bitcoin_price_window_spike = bitcoin_price_window.filter((col("spike") === "up" || col("spike") === "down"))
-        val reddit_comment_window_spike = reddit_comment_window.filter((col("spike") === "up" || col("spike") === "down"))
+        val bitcoin_price_window_spike = bitcoin_price_window.filter(col("spike") === "up" || col("spike") === "down")
+        val reddit_comment_window_spike = reddit_comment_window.filter(col("spike") === "up")
+
+        bitcoin_price_window_spike.show(100)
 
         // count all bitcoin spike
         val bitcoin_spike_count = bitcoin_price_window_spike.count()
@@ -163,6 +165,7 @@ class Transform(val spark: SparkSession, val dbconnect: DBConnector)
                                       """)
                                       /*OR RCWSL.date=BPWS.date
 	    	    	              """)*/
+        affectedSpikedate.show(100)
 
         affectedSpikedate.count()
     }
