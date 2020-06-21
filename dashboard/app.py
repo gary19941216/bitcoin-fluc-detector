@@ -194,10 +194,9 @@ def show_dashboard(session):
                     {'label': '6 MONTH', 'value': 'six_month'},
                     {'label': '1 YEAR', 'value': 'one_year'},
                     {'label': '3 YEAR', 'value': 'three_year'},
-                    {'label': '5 YEAR', 'value': 'five_year'},
-                    {'label': '10 YEAR', 'value': 'ten_year'}
+                    {'label': '5 YEAR', 'value': 'five_year'}
                 ],
-                value='one_month'
+                value='five_year'
             ),
             # dropdown for differnt subreddit
             dcc.Dropdown(
@@ -354,4 +353,4 @@ if __name__ == '__main__':
     # show dash board
     show_dashboard(session)
     # start the server
-    app.run_server(host="0.0.0.0", debug=True)
+    app.run_server(host="0.0.0.0", debug=True, port = 80)
