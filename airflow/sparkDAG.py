@@ -1,5 +1,4 @@
 
-# airflowRedditPysparkDag.py
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
@@ -12,7 +11,7 @@ sparkSubmit = '/usr/local/spark/bin/spark-submit'
 
 ## Define the DAG object
 default_args = {
-    'owner': 'insight-dan',
+    'owner': 'gary-bitcoin-reddit',
     'depends_on_past': False,
     'start_date': datetime(2020, 6, 21),
     'retries': 5,
@@ -21,13 +20,11 @@ default_args = {
 dag = DAG('reddit_bitcoin_DAG', default_args=default_args, schedule_interval=timedelta(10))
 
 command = command=sparkSubmit + scalaClass + packages + path
-print(command)
 
 #task to compute number of unique authors
 unify = BashOperator(
     task_id='unify-data',
     bash_command=command,
     dag=dag)
-#Specify that this task depends on the downloadData task
 #unify.set_upstream(downloadData)
 
