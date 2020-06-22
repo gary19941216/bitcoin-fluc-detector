@@ -5,6 +5,7 @@
 ## **Table of Contents** 
   1. [Problem Statement](#problem-statement)
   2. [Data Pipeline](#data-pipeline)
+  3. [Tool Setup](#tool-setup)
   3. [Data source](#data-source)
   4. [Repo directory structure](#repo-directory-structure)
 
@@ -14,6 +15,16 @@ Bitcoin price fluctuates dramatically, it would be invaluable to find an insight
 
 ## **Data Pipeline** 
 ![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data%20pipeline.png)
+
+## **Tool Setup** 
+
+Specific details for tool setup and usage are under each folder
+
+  1. [Spark](https://github.com/gary19941216/bitcoin-fluc-detector/tree/master/spark)
+  2. [Kafka](https://github.com/gary19941216/bitcoin-fluc-detector/tree/master/kafka/kafka_2.12-2.5.0)
+  3. [Airflow](https://github.com/gary19941216/bitcoin-fluc-detector/tree/master/airflow)
+  4. [Cassandra](https://github.com/gary19941216/bitcoin-fluc-detector/tree/master/cassandra)
+  5. [Dash](https://github.com/gary19941216/bitcoin-fluc-detector/tree/master/dashboard)
 
 ## **Data source** 
 [Reddit comments](https://files.pushshift.io/reddit/comments/) data from 2006 to 2019 (4.9TB uncompressed)
