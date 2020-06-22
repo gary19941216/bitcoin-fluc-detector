@@ -1,4 +1,3 @@
-
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
@@ -17,14 +16,11 @@ default_args = {
     'retries': 5,
     'retry_delay': timedelta(minutes=1),
 }
-dag = DAG('reddit_bitcoin_DAG', default_args=default_args, schedule_interval=timedelta(10))
+dag = DAG('reddit_bitcoin_DAG', default_args=default_args, schedule_interval='*/30 * * * ')
 
 command = command=sparkSubmit + scalaClass + packages + path
 
-#task to compute number of unique authors
 unify = BashOperator(
     task_id='unify-data',
     bash_command=command,
     dag=dag)
-#unify.set_upstream(downloadData)
-

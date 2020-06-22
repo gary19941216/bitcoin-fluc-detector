@@ -13,8 +13,6 @@ import preprocess.Preprocessor
 import dbconnector.DBConnector
 import etl.ETL
 
-import org.apache.spark.sql.streaming._
-
 // transform data to desired format
 class Transform(val spark: SparkSession, val dbconnect: DBConnector)
 {
@@ -31,15 +29,10 @@ class Transform(val spark: SparkSession, val dbconnect: DBConnector)
         val bitcoin_price_window_spike = bitcoin_price_window.filter(col("spike") === "up" || col("spike") === "down")
         val reddit_comment_window_spike = reddit_comment_window.filter(col("spike") === "up")
 
-        bitcoin_price_window_spike.show(100)
-
         // count all bitcoin spike
         val bitcoin_spike_count = bitcoin_price_window_spike.count()
         // count only bitcoin spike affected by reddit spike
-        val affectedSpikeCount = getAffectedSpikeCount(reddit_comment_window_spike, bitcoin_price_window_spike, period)
-
-        println(bitcoin_spike_count)
-        println(affectedSpikeCount)
+        val affectedSpikeCount = scala.math.min(getAffectedSpikeCount(reddit_comment_window_spike, bitcoin_price_window_spike, period), bitcoin_spike_count)
 
         // import spark.implicits._ for toDF function
         import spark.implicits._
@@ -52,8 +45,6 @@ class Transform(val spark: SparkSession, val dbconnect: DBConnector)
         val tableName = "spike"
         val keySpace = "bitcoin_reddit"
         dbconnect.writeToCassandra(spikeDF, tableName, keySpace)
-
-        println(dbtime + " " + subreddit + " " + isSentiment)
     } 
 
     // Join reddit and bitcoin data by time and write into Cassandra.
@@ -85,7 +76,7 @@ class Transform(val spark: SparkSession, val dbconnect: DBConnector)
         // write joined data into cassandra
         val tableName = dbtime + "_" + subreddit + "_" + isSentiment
         val keyspace = "bitcoin_reddit"
-        dbconnect.writeToCassandra(bitcoin_reddit_join, tableName, keyspace)
+        dbconnect.overwriteCassandra(bitcoin_reddit_join, tableName, keyspace)
 
         // return unjoined reddit and bitcoin aggregated data
         (reddit_comment_time, bitcoin_price_time)
@@ -163,9 +154,6 @@ class Transform(val spark: SparkSession, val dbconnect: DBConnector)
                                       JOIN reddit_comment_window_spike_lag AS RCWSL
                                       ON RCWSL.one_step_after=BPWS.date
                                       """)
-                                      /*OR RCWSL.date=BPWS.date
-	    	    	              """)*/
-        affectedSpikedate.show(100)
 
         affectedSpikedate.count()
     }
@@ -306,7 +294,7 @@ class Transform(val spark: SparkSession, val dbconnect: DBConnector)
         // add spike column
         val spikeData = addSpike(windowData, threshold, column)
 
-        spikeData.show(50)
+        //spikeData.show(50)
 
         spikeData
     }

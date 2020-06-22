@@ -2,11 +2,11 @@ package preprocess
 
 import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
 import com.johnsnowlabs.nlp.SparkNLP
-import dataload.DataLoader
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
+import dataload.DataLoader
 
 // preprocessor for dataloader
 class Preprocessor(val spark: SparkSession, val dataloader : DataLoader)

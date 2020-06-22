@@ -14,7 +14,7 @@ class DataLoader(val spark: SparkSession, val schema : StructType)
     def loadCsv(path: String) : DataLoader = 
     {   
         //csv file with no header
-        data = spark.read.schema(schema).csv(path)
+        data = spark.read.schema(schema).option("delimiter", ",").csv(path)
         this
     }
 

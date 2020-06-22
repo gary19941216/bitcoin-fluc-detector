@@ -1,6 +1,5 @@
 package unify
 
-import com.twosigma.flint.timeseries._
 import com.johnsnowlabs.nlp.pretrained.PretrainedPipeline
 import com.johnsnowlabs.nlp.SparkNLP
 import org.apache.spark.sql._
@@ -10,11 +9,11 @@ import org.apache.hadoop.fs._
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.expressions.Window
+import scala.concurrent.duration._
 import java.sql.Date
 import dataload.DataLoader
 import preprocess.Preprocessor
 import dbconnector.DBConnector
-import scala.concurrent.duration._
 import transform.Transform
 import etl.ETL
 
@@ -42,14 +41,13 @@ object Unify
         val bitcoin_real_time = dbconnect.readFromCassandra(tableName, keySpace)
 
 	// List of different time interval and period
-       	val timeList = List(//("date", 3650, "ten_year", 1, 0.05)
-                            ("date", 1825, "five_year", 1, 0.1)
-                            ,("date", 1095, "three_year", 1, 0.1)
-                            ,("date", 365, "one_year", 1, 0.1)
-                            ,("date", 180, "six_month", 1, 0.1)
-                            ,("date", 90, "three_month", 1, 0.1)
-                            ,("date,hour", 30, "one_month", 5, 0.03)
-                            ,("date,hour", 5, "five_day", 5, 0.03)) 
+       	val timeList = List( ("date", 1825, "five_year", 1, 0.07)
+                            ,("date", 1095, "three_year", 1, 0.07)
+                            ,("date", 365, "one_year", 1, 0.07)
+                            ,("date", 180, "six_month", 1, 0.07)
+                            ,("date", 90, "three_month", 1, 0.07)
+                            ,("date,hour", 30, "one_month", 5, 0.05)
+                            ,("date,hour", 5, "five_day", 5, 0.05)) 
 
         // loop through the time list
 	for((period, interval, dbtime, windowSize, threshold) <- timeList){

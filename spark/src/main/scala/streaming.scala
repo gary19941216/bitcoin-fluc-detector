@@ -7,14 +7,14 @@ import org.apache.spark.sql.functions.{col, udf}
 import org.apache.hadoop.fs._
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.streaming._
 import dataload.DataLoader
 import preprocess.Preprocessor
 import dbconnector.DBConnector
 import etl.ETL
 import transform.Transform
 
-import org.apache.spark.sql.streaming._
-
+// Spark Structured Streaming
 object Streaming
 {
     // get spark session
@@ -73,7 +73,7 @@ object Streaming
         // start query for writing stream into Cassandra database
 	val bitcoin_query = bitcoin_price_window_time.writeStream
 
-        // microbatch processing
+        // microbatch processing for bitcoin
         .foreachBatch { (batchDF, _) => 
             val table = "bitcoin_streaming_test5"
             val keyspace = "bitcoin_reddit"
@@ -111,7 +111,7 @@ object Streaming
                 // start query for writing stream into Cassandra database
 		val reddit_query = reddit_comment_window_time.writeStream
 
-                // microbatch processing
+                // microbatch processing for reddit
 		.foreachBatch { (batchDF, _) =>
 	    	    val table = "reddit_streaming_test5_" + subreddit + "_" + isSentiment
                     val keyspace = "bitcoin_reddit"

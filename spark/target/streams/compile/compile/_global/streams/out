@@ -1,7 +1,9 @@
-[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:19:1: expected class or object definition[0m
-[0m[[0m[31merror[0m] [0m[0mClass Transform(val spark: SparkSession, val dbconnect: DBConnector)[0m
-[0m[[0m[31merror[0m] [0m[0m^[0m
-[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/batch_processing/src/main/scala/transform.scala:20:1: expected class or object definition[0m
-[0m[[0m[31merror[0m] [0m[0m{[0m
-[0m[[0m[31merror[0m] [0m[0m^[0m
-[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m
+[0m[[0m[31merror[0m] [0m[0m/usr/local/Insight_Project/bitcoin-fluc-detector/spark/src/main/scala/transform.scala:297:56: overloaded method value min with alternatives:[0m
+[0m[[0m[31merror[0m] [0m[0m  (x: Double,y: Double)Double <and>[0m
+[0m[[0m[31merror[0m] [0m[0m  (x: Float,y: Float)Float <and>[0m
+[0m[[0m[31merror[0m] [0m[0m  (x: Long,y: Long)Long <and>[0m
+[0m[[0m[31merror[0m] [0m[0m  (x: Int,y: Int)Int[0m
+[0m[[0m[31merror[0m] [0m[0m cannot be applied to (org.apache.spark.sql.Column)[0m
+[0m[[0m[31merror[0m] [0m[0m                             .withColumn("window_min", min(data(column)).over(window))[0m
+[0m[[0m[31merror[0m] [0m[0m                                                       ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m
