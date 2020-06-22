@@ -156,11 +156,11 @@
       
       ```bin/kafka-topics.sh --create --bootstrap-server 10.0.0.7:9092 --replication-factor 1 --partitions 1 --topic test-cluster```
       
-      Change the --bootstrap-server ip to your own ip, any instance's ip will work.
+      Change the ```--bootstrap-server``` ip to your own ip, any instance's ip will work.
   
        ```bin/kafka-console-producer.sh --bootstrap-server 10.0.0.7:9092 --topic test-cluster```
        
-       Change the --bootstrap-server ip to your own ip, any instance's ip will work.
+       Change the ```--bootstrap-server``` ip to your own ip, any instance's ip will work.
        
        Type any messages.
        
@@ -168,7 +168,7 @@
        
        ```bin/kafka-console-consumer.sh --bootstrap-server 10.0.0.7:9092 --topic test --from-beginning```
       
-       Change the --bootstrap-server ip to your own ip, any instance's ip will work.
+       Change the ```--bootstrap-server``` ip to your own ip, any instance's ip will work.
        
        On the terminal, you will see the messages you just typed in.
        
