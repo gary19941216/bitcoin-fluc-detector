@@ -1,4 +1,4 @@
-# **How to Install and Run Apache Kafka on a single Ubuntu EC2 instance**
+## **How to Install and Run Apache Kafka on a single Ubuntu EC2 instance**
 
   1.  Update apt: 
   
@@ -56,7 +56,7 @@
       
       
       
-# **How to setup and run Apache Kafka Cluster**
+## **How to setup and run Apache Kafka Cluster**
 
   1.  Suppose we have three EC2 instances, we will run zookeeper and server on all the three instances.
   
