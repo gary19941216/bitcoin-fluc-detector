@@ -4,33 +4,49 @@
   
       ```sudo apt update```
       
+      
+      
   2.  Install OpenJDK package:
   
       ```sudo apt install openjdk-8-jdk```
+      
+      
       
   3.  Verify the Java installation:
   
       ```java -version```
       
+      
+      
   4.  Install the apt-transport-https package that is necessary to access a repository over HTTPS:
   
       ```sudo apt install apt-transport-https```
+      
+      
       
   5.  Add the Apache Cassandra repository. Import the repository’s GPG using the following wget command:
   
       ```wget -q -O - https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -```
       
+      
+      
   6.  Add the Cassandra repository to the system:
   
       ```sudo sh -c 'echo "deb http://www.apache.org/dist/cassandra/debian 311x main" > /etc/apt/sources.list.d/cassandra.list' ```
+      
+      
       
   7.  Update the apt package list and install the latest version of Apache Cassandra:
   
       ```sudo apt update``` and ```sudo apt install cassandra```
       
+      
+      
   8.  Verify that Cassandra is running by typing:
   
       ```nodetool status```
+      
+      
       
   9.  If success, something simliar should be shows as below:
   
@@ -42,6 +58,8 @@
       --  Address    Load        Tokens       Owns (effective)  Host ID                               Rack
       UN  127.0.0.1  114.55 KiB  256          100.0%            d8c27e24-ea26-4eeb-883c-5986218ba3ca  rack1
       ```
+  
+  
   
   10.  If you're going to setup a cassandra cluster, repeat these steps on all the instances.
   
@@ -58,17 +76,25 @@
       10.0.0.14
       ```
   
+  
+  
   2.  Stop Cassandra:
   
       ```sudo service cassandra stop```
+      
+      
       
   3.  Clear the data:
   
       ```sudo rm -rf /var/lib/cassandra/*```
       
+      
+      
   4.  Go to the folder where cassandra config file are located:
   
       ```cd /etc/cassandra/```
+      
+      
       
   5.  configure ```cassandra.yaml``` file:
   
@@ -86,6 +112,8 @@
       
       endpoint_snitch: GossipingPropertyFileSnitch
       
+      
+      
   6.  configure ```cassandra-rackdc.properties``` file:
   
       ```vim cassandra-rackdc.properties```
@@ -99,6 +127,8 @@
       We only have four nodes, so setting all of them in same data center and same rack would be sufficient.
       
       Make sure all of them have the same data center and rack name.
+      
+      
       
   7.  start cassandra:
   
@@ -115,6 +145,8 @@
       Make sure to start the next one only if the previous one is added into the cluster without any problem.
       
       Use ```nodetool status``` to check.
+      
+      
       
   8.  If any error occurs, start from step2 and step3 on every instances.
       
