@@ -2,6 +2,8 @@
 
 [Slide](https://docs.google.com/presentation/d/1YPG49iJSVNnVeLwXt1wXepNnuA7-XJpmp-iD18YTBms/edit)
 
+![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/Bitcoin-Reddit-Historical.png)
+
 ## **Table of Contents** 
   1. [Problem Statement](#problem-statement)
   2. [Data Pipeline](#data-pipeline)
