@@ -76,7 +76,7 @@
       
       cluster_name: make sure all of the EC2 instances have the same cluster name
       
-      - seeds: "10.0.0.5,10.0.0.6"
+      seeds: "10.0.0.5,10.0.0.6"
       
       listen_address: ip of the instance you are currently configuring
       
@@ -88,6 +88,8 @@
       
   6.  configure ```cassandra-rackdc.properties``` file:
   
+      ```vim cassandra-rackdc.properties```
+  
       ```bash
       # indicate the rack and dc for this node
       dc=DC1
@@ -95,6 +97,7 @@
       ```
       
       We only have four nodes, so setting all of them in same data center and same rack would be sufficient.
+      
       Make sure all of them have the same data center and rack name.
       
   7.  start cassandra:
@@ -102,11 +105,19 @@
       ```sudo service cassandra start```
       
       Make sure you have done step2 and step3 on every instances before starting.
+      
       If some instances haven't been stopped, those instances will have problem being adding into the cluster.
       
       Start the node one by one.
+      
       Starting from the seed nodes.
+      
       Make sure to start the next one only if the previous one is added into the cluster without any problem.
+      
       Use ```nodetool status``` to check.
+      
+  8.  If any error occurs, start from step2 and step3 on every instances.
+      
+      Skip the configuring part to step 7, if you are confident all the files are configured corretly.
       
       
