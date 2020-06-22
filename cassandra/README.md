@@ -1,4 +1,4 @@
-# **How to setup cassandra on a single Ubuntu EC2 instance** 
+## **How to setup cassandra on a single Ubuntu EC2 instance** 
 
   1.  Update apt: 
   
@@ -65,7 +65,7 @@
   
   
   
-# **How to setup cassandra cluster** 
+## **How to setup cassandra cluster** 
 
   1.  Suppose we have four EC2 instances, two of them will be the seeds, two of them will be the replica.
   
