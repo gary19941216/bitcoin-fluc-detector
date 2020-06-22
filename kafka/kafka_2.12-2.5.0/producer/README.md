@@ -25,13 +25,31 @@
       
       Change the bootstrap servers ip to your own.
       
-  2.  Compile Java code with maven:
+  2.  Update apt-get:
+  
+      ```sudo apt-get update```
+      
+  3.  Install awscli:
+  
+      ```sudo apt-get install awscli```
+      
+  4.  Congifure aws:
+  
+      ```aws configure```
+      
+      Fill in your Access key ID and Secret access key
+      
+  5.  Install maven:
+  
+      ```sudo apt install maven```
+      
+  6.  Compile Java code with maven:
   
       run the command under ```producer``` folder.
   
       ```mvn clean package```
       
-  3.  Run the Java code with maven:
+  7.  Run the Java code with maven:
   
       run the command under ```producer``` folder.
       
@@ -39,7 +57,7 @@
       
       Change ```redditProducer``` to your own java file.
       
-  4.  Verify it's working:
+  8.  Verify it's working:
   
       Open up new terminal and run,
   
