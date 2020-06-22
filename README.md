@@ -23,7 +23,7 @@ Bitcoin attracted more and more investors globally in the last decades,  along w
 
 ## **Tool Setup** 
 
-Specific details for tool setup and usage are under each folder
+  Specific details for tool setup and usage are under each folder
 
   1. [Spark](https://github.com/gary19941216/bitcoin-fluc-detector/tree/master/spark)
   2. [Kafka](https://github.com/gary19941216/bitcoin-fluc-detector/tree/master/kafka/kafka_2.12-2.5.0)
