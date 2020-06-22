@@ -32,7 +32,7 @@ public class redditProducer {
 	// length of bytes
 	long range = 100000000000000L;
 	// Kafka topic
-	String topic = "reddittest";
+	String topic = "reddit";
 
 	// s3 object initailizing
         S3Object fullObject = null, objectPortion = null, headerOverrideObject = null;

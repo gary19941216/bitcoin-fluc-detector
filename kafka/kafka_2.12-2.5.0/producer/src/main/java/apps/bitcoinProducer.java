@@ -32,7 +32,7 @@ public class bitcoinProducer {
 	// length of bytes
 	long range = 100000000000000L;
 	// Kafka topic
-	String topic = "bitcointest";
+	String topic = "bitcoin";
 
 	// s3 object initailizing
         S3Object fullObject = null, objectPortion = null, headerOverrideObject = null;
