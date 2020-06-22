@@ -223,6 +223,8 @@ object Unify
           .master("spark://10.0.0.11:7077")
           // set parallelism for spark job
           .config("spark.default.parallelism", 50)
+          // set executor cores
+          .config("spark.executor.cores", 1)
           // ip address for one of the cassandra seeds
           .config("spark.cassandra.connection.host", "10.0.0.6")
           .config("spark.cassandra.auth.username", "cassandra")

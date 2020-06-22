@@ -75,7 +75,7 @@ object Streaming
 
         // microbatch processing for bitcoin
         .foreachBatch { (batchDF, _) => 
-            val table = "bitcoin_streaming_test5"
+            val table = "bitcoin_streaming"
             val keyspace = "bitcoin_reddit"
             // append data to Cassandra
             dbconnect.writeToCassandra(batchDF, table, keyspace)
@@ -113,7 +113,7 @@ object Streaming
 
                 // microbatch processing for reddit
 		.foreachBatch { (batchDF, _) =>
-	    	    val table = "reddit_streaming_test5_" + subreddit + "_" + isSentiment
+	    	    val table = "reddit_streaming_" + subreddit + "_" + isSentiment
                     val keyspace = "bitcoin_reddit"
                     // append data to Cassandra
                     dbconnect.writeToCassandra(batchDF, table, keyspace)
@@ -253,6 +253,8 @@ object Streaming
           .master("spark://10.0.0.11:7077")
           // set parallelism for spark job
           .config("spark.default.parallelism", 50)
+          // set executor cores
+          .config("spark.executor.cores", 3)
           // ip address for one of the cassandra seeds
           .config("spark.cassandra.connection.host", "10.0.0.6")
           .config("spark.cassandra.auth.username", "cassandra")
