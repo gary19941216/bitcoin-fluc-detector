@@ -43,8 +43,8 @@ Bitcoin attracted more and more investors globally in the last decades,  along w
 ├── dashboard
 │   └── frontend.py
 ├── cassandra
-    ├── cassandra.yaml
-    └── cassandra-rackdc.properties
+│   ├── cassandra.yaml
+│   └── cassandra-rackdc.properties
 ├── airflow
 │   └── sparkDAG.py
 ├── kafka
