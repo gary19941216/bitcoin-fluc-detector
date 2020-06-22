@@ -41,6 +41,8 @@
       
   4.  Verify it's working:
   
+      Open up new terminal and run,
+  
       ```bin/kafka-console-producer.sh --bootstrap-server 10.0.0.7:9092 --topic producer-test```
       
       Change ```--bootstrap-server``` ip to your own ip, and change ```producer-test``` to your Kafka topic.
