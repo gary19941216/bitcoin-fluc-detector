@@ -93,9 +93,9 @@
       
       Change each server ip to your own ip, make sure all zookeeper.properties on every instances are same.
       
-      dataDir=zookeeper will determined where your zookeeper folder will be created. 
+      ```dataDir=zookeeper``` will determined where your zookeeper folder will be created. 
       
-      If you use the original dataDir=/tmp/zookeeper, it will be stored under /tmp/zookeeper.
+      If you use the original ```dataDir=/tmp/zookeeper```, it will be stored under ```/tmp/zookeeper```.
       
       
   3.  Go to the zookeeper folder:
