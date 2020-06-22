@@ -162,7 +162,7 @@
        
        Type any messages.
        
-       Open up a new terminal different from the one you just used to create topic and run producer.
+       Open up a new terminal on instance different from the one you just used to create topic and run producer.
        
        ```bin/kafka-console-consumer.sh --bootstrap-server 10.0.0.7:9092 --topic test --from-beginning```
       
