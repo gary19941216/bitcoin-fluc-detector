@@ -1,4 +1,4 @@
-# **How to run Dash app** 
+## **How to run Dash app** 
 
   1.  Install pip3:
   
@@ -21,7 +21,7 @@
       ```sudo python3 frontend.py```
       
       
-# **How to use the Dash app**
+## **How to use the Dash app**
 
   1.  There are three graphs in the Dash app, "Bitcoin_Reddit_Historical", "Bitcoin_Reddit_Real_Time", and "Bitcoin_Reddit_Spike".
   
