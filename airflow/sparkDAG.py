@@ -12,11 +12,11 @@ sparkSubmit = '/usr/local/spark/bin/spark-submit'
 default_args = {
     'owner': 'gary-bitcoin-reddit',
     'depends_on_past': False,
-    'start_date': datetime(2020, 6, 21),
+    'start_date': datetime(2020, 6, 22, 10, 53),
     'retries': 5,
     'retry_delay': timedelta(minutes=1),
 }
-dag = DAG('reddit_bitcoin_DAG', default_args=default_args, schedule_interval='*/30 * * * ')
+dag = DAG('reddit_bitcoin_dag', default_args=default_args, schedule_interval='*/1 * * * *')
 
 command = command=sparkSubmit + scalaClass + packages + path
 
