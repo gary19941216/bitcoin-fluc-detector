@@ -254,7 +254,7 @@ object Streaming
           // set parallelism for spark job
           .config("spark.default.parallelism", 50)
           // set executor cores
-          .config("spark.executor.cores", 3)
+          .config("spark.executor.cores", 4)
           // ip address for one of the cassandra seeds
           .config("spark.cassandra.connection.host", "10.0.0.6")
           .config("spark.cassandra.auth.username", "cassandra")

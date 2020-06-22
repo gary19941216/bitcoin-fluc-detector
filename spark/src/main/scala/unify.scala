@@ -41,13 +41,13 @@ object Unify
         val bitcoin_real_time = dbconnect.readFromCassandra(tableName, keySpace)
 
 	// List of different time interval and period
-       	val timeList = List( ("date", 1825, "five_year", 1, 0.07)
-                            ,("date", 1095, "three_year", 1, 0.07)
-                            ,("date", 365, "one_year", 1, 0.07)
-                            ,("date", 180, "six_month", 1, 0.07)
-                            ,("date", 90, "three_month", 1, 0.07)
-                            ,("date,hour", 30, "one_month", 5, 0.05)
-                            ,("date,hour", 5, "five_day", 5, 0.05)) 
+       	val timeList = List( ("date", 1825, "five_year", 1, 0.06)
+                            ,("date", 1095, "three_year", 1, 0.06)
+                            ,("date", 365, "one_year", 1, 0.06)
+                            ,("date", 180, "six_month", 1, 0.06)
+                            ,("date", 90, "three_month", 1, 0.06)
+                            ,("date,hour", 30, "one_month", 5, 0.04)
+                            ,("date,hour", 5, "five_day", 5, 0.04)) 
 
         // loop through the time list
 	for((period, interval, dbtime, windowSize, threshold) <- timeList){
@@ -224,7 +224,7 @@ object Unify
           // set parallelism for spark job
           .config("spark.default.parallelism", 50)
           // set executor cores
-          .config("spark.executor.cores", 1)
+          .config("spark.executor.cores", 4)
           // ip address for one of the cassandra seeds
           .config("spark.cassandra.connection.host", "10.0.0.6")
           .config("spark.cassandra.auth.username", "cassandra")
