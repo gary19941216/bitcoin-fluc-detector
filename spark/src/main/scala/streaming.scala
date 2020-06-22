@@ -39,10 +39,10 @@ object Streaming
     private val (rcPreprocessor, bpPreprocessor) = (new Preprocessor(spark, rcLoader), new Preprocessor(spark, bpLoader))
 
     // Kafka topic for Reddit
-    private val redditTopic = "reddittest"
+    private val redditTopic = "reddit"
 
     // Kafka topic for Bitcoin
-    private val bitcoinTopic = "bitcointest"
+    private val bitcoinTopic = "bitcoin"
 
     def main(args: Array[String])
     {
