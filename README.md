@@ -5,15 +5,20 @@
 ![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/Bitcoin-Reddit-Historical.png)
 
 ## **Table of Contents** 
-  1. [Problem Statement](#problem-statement)
-  2. [Data Pipeline](#data-pipeline)
-  3. [Tool Setup](#tool-setup)
-  3. [Data source](#data-source)
-  4. [Repo directory structure](#repo-directory-structure)
+  1. [Introduction](#introduction)
+  2. [Problem Statement](#problem-statement)
+  3. [Data Pipeline](#data-pipeline)
+  4. [Tool Setup](#tool-setup)
+  5. [Data source](#data-source)
+  6. [Repo directory structure](#repo-directory-structure)
+
+## **Introduction**
+The purpose of Reddit-Trend-Bitcoin is to analyze how Reddit cryptocurrency community users' comments could possibly affect others thought and as a result influence the price of Bitcoin. 
 
 ## **Problem Statement** 
-Bitcoin price fluctuates dramatically, it would be invaluable to find an insight into how Reddit cryptocurrency community users might make an impact on the price.
-
+Bitcoin price fluctuates dramatically, it would be invaluable to find an insight on what could possibly influence the price.
+The price of bitcoin goes up when people buys in bitcoin, and vice versa. When there are breaking news or lots of people discussing 
+the price might fall or rise, susceptible people would have high possibility following the crowd and make their decision accordingly. If there are just a few people affected, the price probably wouldn't change a lot. However, Reddit "Bitcoin" and "Crypocurrency" subreddit have over one million members, every influential comments post by users could greatly affect lots of people and price could possibly rise or fall correspondingly.
 
 ## **Data Pipeline** 
 ![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data%20pipeline.png)
