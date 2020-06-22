@@ -13,12 +13,10 @@
   6. [Repo directory structure](#repo-directory-structure)
 
 ## **Introduction**
-The purpose of Reddit-Trend-Bitcoin is to analyze how Reddit cryptocurrency community users' comments could possibly affect others thought and as a result influence the price of Bitcoin. 
+The purpose of Reddit-Trend-Bitcoin is to analyze how the comments of Reddit cryptocurrency community could potentially affect others thought and as a result influence the price of Bitcoin. 
 
 ## **Problem Statement** 
-Bitcoin price fluctuates dramatically, it would be invaluable to find an insight on what could possibly influence the price.
-The price of bitcoin goes up when people buys in bitcoin, and vice versa. When there are breaking news or lots of people discussing 
-the price might fall or rise, susceptible people would have high possibility following the crowd and make their decision accordingly. If there are just a few people affected, the price probably wouldn't change a lot. However, Reddit "Bitcoin" and "Crypocurrency" subreddit have over one million members, every influential comments post by users could greatly affect lots of people and price could possibly rise or fall correspondingly.
+Bitcoin attracted more and more investors globally in the last decades,  along with the fact that its prices have fluctuated dramatically. Even though many factors might involve in these fluctuations, it is still valuable to figure out a potential pattern that shows how the prices impacted by one or more variables. We know that if the amount of investors who were holding a positive attitude is large enough, the prices of bitcoin may thus increase, and vice versa. Interestingly, there are a few online communities with large numbers of users actively sharing their insights and predictions about the market. These comments might influence people's expectations of bitcoin's prices and their investment decisions. In this project, several subreddits, such as "Bitcoin" and "Cryptocurrency", would be analyzed and compared with the trends of bitcoin's prices in the past decades. Its purpose is to see if there is any significant correlation between the users' comments and bitcoin's prices. 
 
 ## **Data Pipeline** 
 ![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data%20pipeline.png)
