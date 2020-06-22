@@ -1,4 +1,4 @@
-# **How to setup Airflow on a single Ubuntu EC2 instance**
+## **How to setup Airflow on a single Ubuntu EC2 instance**
 
   1.  Install pip3:
   
