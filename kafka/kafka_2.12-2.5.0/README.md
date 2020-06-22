@@ -60,11 +60,11 @@
 
   1.  Suppose we have three EC2 instances, we will run zookeeper and server on all the three instances.
   
+      ```bash
       10.0.0.7 (first)
-      
       10.0.0.13 (second)
-      
       10.0.0.10 (third)
+      ```
       
       the order matters later when configuring files.
   
