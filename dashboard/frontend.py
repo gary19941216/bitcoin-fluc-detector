@@ -106,9 +106,9 @@ def get_data_layout(bitcoin_reddit_df, title):
 def current_get_df(subreddit, sentiment):
 
     # select data, hour, price from bitcoin streaming table
-    bitcoin_query = "SELECT date, hour, price FROM bitcoin_streaming_test5"
+    bitcoin_query = "SELECT date, hour, price FROM bitcoin_streaming"
     # select data, hour, price from reddit streaming table
-    reddit_query = "SELECT date, hour, score FROM reddit_streaming_test5_{subreddit}_{sentiment}" \
+    reddit_query = "SELECT date, hour, score FROM reddit_streaming_{subreddit}_{sentiment}" \
                     .format(subreddit=subreddit, sentiment=sentiment)
 
     # get bitcoin dataframe 
