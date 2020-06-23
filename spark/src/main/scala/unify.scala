@@ -36,7 +36,7 @@ object Unify
     {
 
 	// read bitcoin real time data from Cassandra
-        val tableName = "bitcoin_streaming_test"
+        val tableName = "bitcoin_streaming"
         val keySpace = "bitcoin_reddit"
         val bitcoin_real_time = dbconnect.readFromCassandra(tableName, keySpace)
 
@@ -65,7 +65,7 @@ object Unify
                 for(isSentiment <- withSentiment){
                  
                     // read reddit real time data from cassandra
-                    val tableName = "reddit_streaming_test5_" + subreddit + "_" + isSentiment
+                    val tableName = "reddit_streaming_" + subreddit + "_" + isSentiment
                     val keySpace = "bitcoin_reddit"
                     val reddit_real_time = dbconnect.readFromCassandra(tableName, keySpace)
     
