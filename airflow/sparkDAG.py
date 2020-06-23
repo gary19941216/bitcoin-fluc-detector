@@ -16,7 +16,7 @@ default_args = {
     'retries': 5,
     'retry_delay': timedelta(minutes=1),
 }
-dag = DAG('reddit_bitcoin_dag', default_args=default_args, schedule_interval='*/1 * * * *')
+dag = DAG('reddit_bitcoin_dag', default_args=default_args, schedule_interval='*/30 * * * *')
 
 command = command=sparkSubmit + scalaClass + packages + path
 
