@@ -5,7 +5,7 @@ import os
 
 scalaClass = ' --class unify.Unify'
 packages = ' --packages com.datastax.spark:spark-cassandra-connector_2.11:2.5.0,com.johnsnowlabs.nlp:spark-nlp_2.11:2.4.2,org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.3'
-path = ' /usr/local/Insight_Project/bitcoin-fluc-detector/Spark/target/scala-2.11/bit_fluc_2.11-1.0.jar'
+path = ' /usr/local/Insight_Project/bitcoin-fluc-detector/spark/target/scala-2.11/bit_fluc_2.11-1.0.jar'
 sparkSubmit = '/usr/local/spark/bin/spark-submit'
 
 ## Define the DAG object
