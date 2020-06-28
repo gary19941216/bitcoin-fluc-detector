@@ -26,15 +26,15 @@ Its purpose is to see if there is any significant correlation between the users'
 
 The project is composed of two main parts, a batch and a real-time pipeline, along with the unify process for historical and real-time data.
 
-#### **Batch Pipeline** 
+### **Batch Pipeline** 
 
 The upper part is the batch pipeline which serves as the ETL pipeline. The raw data is stored in Amazon S3 as a collection of files in the JSON format. By using Apache Spark, I extracted the information from Reddit's comments that were relevant to Bitcoin prices and then accumulated scores (difference between the numbers of upvotes and downvotes) within different time intervals. In the analysis part, firstly, indentified spikes of Reddit comments scores and Bitcoin prices by using Spark Window Functions. Second, I joined the spikes of the two datasets if the spikes of the Reddit comments scores appeared one day before that of Bitcoin prices. This process excluded the situation that Bitcoin prices invoked the spike of Reddit comments and ensured the logic validity of the results. 
 
-#### **Real-Time Pipeline** 
+### **Real-Time Pipeline** 
 
 The lower part is the real-time pipeline which is architected using Apache Kafka as the backbone. Real-time data would be produced to Kafka topic and consumed using Spark structured streaming.
 
-#### **Unify Process** 
+### **Unify Process** 
 
 At last, Apache Airflow is applied to unify historical data and real-time data which was stored in Cassandra.
 
