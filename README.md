@@ -23,7 +23,6 @@ In this project, several subreddits, such as "Bitcoin" and "Cryptocurrency", wou
 Its purpose is to see if there is any significant correlation between the users' comments and bitcoin's prices. 
 
 ## **Data Pipeline** 
-![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data%20pipeline.png)
 
 The project is composed of two main parts, a batch and a real-time pipeline, along with the unify process for historical and real-time data.
 
@@ -38,6 +37,8 @@ The lower part is the real-time pipeline which is architected using Apache Kafka
 #### **Unify Process** 
 
 At last, Apache Airflow is applied to unify historical data and real-time data which was stored in Cassandra.
+
+![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data%20pipeline.png)
 
 
 ## **Tool Setup** 
