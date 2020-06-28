@@ -19,6 +19,7 @@ Even though many factors might involve in these fluctuations, it is still valuab
 
 Interestingly, there are a few online communities with large numbers of users actively sharing their insights and predictions about the market. 
 These comments might influence people's expectations of bitcoin's prices and their investment decisions. 
+
 In this project, several subreddits, such as "Bitcoin" and "Cryptocurrency", would be analyzed and compared with the trends of bitcoin's prices in the past decades. 
 Its purpose is to see if there is any significant correlation between the users' comments and bitcoin's prices. 
 
