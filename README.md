@@ -15,13 +15,13 @@ The purpose of Reddit-Trend-Bitcoin is to analyze how the comments of Reddit cry
 
 ## **Problem Statement** 
 Bitcoin attracted more and more investors globally in the last decades, along with the fact that its prices have fluctuated dramatically. 
-Even though many factors might involve in these fluctuations, it is still valuable to figure out a potential pattern that shows how the prices impacted by one or more variables. We know that if the amount of investors who were holding a positive attitude is large enough, the prices of bitcoin may thus increase since many of them would possibly buy in Bitcoin, and vice versa. 
+Even though many factors might involve in these fluctuations, it is still valuable to figure out a potential pattern that shows how the prices impacted by one or more variables. We know that if the amount of investors who were holding a positive attitude is large enough, the prices of bitcoin may thus increase since many of them would possibly buy in bitcoin, and vice versa. 
 
 Interestingly, there are a few online communities with large numbers of users actively sharing their insights and predictions about the market. 
 These comments might influence people's expectations of bitcoin's prices and their investment decisions. 
 
 In this project, several subreddits, such as "Bitcoin" and "Cryptocurrency", would be analyzed and compared with the trends of bitcoin's prices in the past decades. 
-Its purpose is to see if there is any significant correlation between the users' comments and bitcoin's prices. 
+Its purpose is to see if there is any significant correlation between the users' comments and bitcoin prices. 
 
 ## **Data Pipeline** 
 
@@ -29,7 +29,7 @@ The project is composed of two main parts, a batch and a real-time pipeline, alo
 
 ### **Batch Pipeline** 
 
-The upper part is the batch pipeline which serves as the ETL pipeline. The raw data is stored in Amazon S3 as a collection of files in the JSON format. By using Apache Spark, I extracted the information from Reddit's comments that were relevant to Bitcoin prices and then accumulated scores (difference between the numbers of upvotes and downvotes) within different time intervals. In the analysis part, firstly, indentified spikes of Reddit comments scores and Bitcoin prices by using Spark Window Functions. Second, I joined the spikes of the two datasets if the spikes of the Reddit comments scores appeared one day before that of Bitcoin prices. This process excluded the situation that Bitcoin prices invoked the spike of Reddit comments and ensured the logic validity of the results. 
+The upper part is the batch pipeline which serves as the ETL pipeline. The raw data is stored in Amazon S3 as a collection of files in the JSON format. By using Apache Spark, I extracted the information from Reddit's comments that were relevant to bitcoin prices and then accumulated scores (difference between the numbers of upvotes and downvotes) within different time intervals. In the analysis part, firstly, indentified spikes of Reddit comments scores and bitcoin prices by using Spark Window Functions. Second, I joined the spikes of the two datasets if the spikes of the Reddit comments scores appeared one day before that of bitcoin prices. This process excluded the situation that bitcoin prices invoked the spike of Reddit comments and ensured the logic validity of the results. 
 
 ### **Real-Time Pipeline** 
 
