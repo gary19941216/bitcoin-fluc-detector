@@ -15,7 +15,7 @@ The purpose of Reddit-Trend-Bitcoin is to analyze how the comments of Reddit cry
 
 ## **Problem Statement** 
 Bitcoin attracted more and more investors globally in the last decades, along with the fact that its prices have fluctuated dramatically. 
-Even though many factors might involve in these fluctuations, it is still valuable to figure out a potential pattern that shows how the prices impacted by one or more variables. We know that if the amount of investors who were holding a positive attitude is large enough, the prices of bitcoin may thus increase, and vice versa. 
+Even though many factors might involve in these fluctuations, it is still valuable to figure out a potential pattern that shows how the prices impacted by one or more variables. We know that if the amount of investors who were holding a positive attitude is large enough, the prices of bitcoin may thus increase since many of them would possibly buy in Bitcoin, and vice versa. 
 
 Interestingly, there are a few online communities with large numbers of users actively sharing their insights and predictions about the market. 
 These comments might influence people's expectations of bitcoin's prices and their investment decisions. 
