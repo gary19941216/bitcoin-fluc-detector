@@ -39,7 +39,7 @@ The lower part is the real-time pipeline which is architected using Apache Kafka
 
 At last, Apache Airflow is applied to unify historical data and real-time data which was stored in Cassandra.
 
-![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data%20pipeline.png)
+![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/data-pipeline.png)
 
 
 ## **Tool Setup** 
