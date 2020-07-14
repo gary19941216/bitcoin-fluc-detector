@@ -2,7 +2,7 @@
 
 The purpose of Reddit-Trend-Bitcoin is to analyze how the comments of Reddit cryptocurrency community could potentially affect others thought and as a result influence the price of Bitcoin. 
 
-[Demo](https://www.youtube.com/watch?v=u8knZziJE6o&feature=emb_logo) and [Slide](https://docs.google.com/presentation/d/1YPG49iJSVNnVeLwXt1wXepNnuA7-XJpmp-iD18YTBms/edit).
+[Demo](https://www.youtube.com/watch?v=Yh3pprMIJ04) and [Slide](https://docs.google.com/presentation/d/1YPG49iJSVNnVeLwXt1wXepNnuA7-XJpmp-iD18YTBms/edit).
 
 ![](https://github.com/gary19941216/bitcoin-fluc-detector/blob/master/Images/Bitcoin-Reddit-Historical.png)
 
